@@ -1,0 +1,10 @@
+spring.application.name: test-cache-server
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  endpoint:
+    prometheus:
+      enabled: true

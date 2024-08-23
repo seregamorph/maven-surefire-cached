@@ -1,0 +1,67 @@
+version: '3.8'
+
+networks:
+  monitoring:
+    driver: bridge
+
+services:
+  test-cache-server:
+    container_name: test-cache-server
+    build:
+      context: test-cache-server
+    ports:
+      - "8080:8080"
+
+  prometheus:
+    image: prom/prometheus:v2.53.2
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana-oss:11.1.4
+    container_name: grafana
+    ports:
+      - '3000:3000'
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+    restart: unless-stopped
+
+#  node_exporter:
+#    image: quay.io/prometheus/node-exporter:v1.5.0
+#    container_name: node_exporter
+#    command: '--path.rootfs=/host'
+#    pid: host
+#    restart: unless-stopped
+#    volumes:
+#      - /:/host:ro,rslave
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.47.0
+    container_name: cadvisor
+    command:
+      - '-port=8098'
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    privileged: true
+    restart: unless-stopped
+
+volumes:
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
