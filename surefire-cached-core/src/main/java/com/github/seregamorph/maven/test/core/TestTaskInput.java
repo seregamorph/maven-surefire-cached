@@ -31,8 +31,8 @@ public final class TestTaskInput {
     private final SortedMap<String, String> properties = new TreeMap<>();
 
     /**
-     * "$groupId:$artifactId" (no version and no classifier) -> file hash
-     * artifactName is not included in hash, only file hash
+     * "$groupId:$artifactId[:$classifier]" (no version and optional classifier) -> file hash
+     * artifactName is not included in hash, only file hash with classpath sensitivity (ignore timestamp)
      */
     private final SortedMap<String, String> artifactHashes = new TreeMap<>();
 
@@ -69,8 +69,11 @@ public final class TestTaskInput {
         this.moduleName = moduleName;
     }
 
-    public void addArtifactHash(String groupId, String artifactId, String hash) {
+    public void addArtifactHash(String groupId, String artifactId, @Nullable String classifier, String hash) {
         var key = groupId + ":" + artifactId;
+        if (classifier != null && !classifier.isEmpty()) {
+            key += ":" + classifier;
+        }
         if (artifactHashes.put(key, hash) != null) {
             throw new IllegalStateException("Duplicate classpath entry: " + key);
         }

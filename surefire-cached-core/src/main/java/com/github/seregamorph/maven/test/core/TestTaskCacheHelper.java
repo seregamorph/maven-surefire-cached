@@ -30,7 +30,8 @@ public class TestTaskCacheHelper {
                 // a classes directory (when "test" command is executed)
                 var file = artifact.getFile();
                 var hash = fileHashCache.getFileHash(file, FileSensitivity.CLASSPATH);
-                testTaskInput.addArtifactHash(artifact.getGroupId(), artifact.getArtifactId(), hash);
+                testTaskInput.addArtifactHash(artifact.getGroupId(), artifact.getArtifactId(),
+                        artifact.getClassifier(), hash);
             }
         }
         if (testClasspath.classesDir().exists()) {
