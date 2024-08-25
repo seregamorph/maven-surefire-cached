@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 
 @JsonPropertyOrder({
@@ -23,7 +24,9 @@ import javax.annotation.Nullable;
         "properties",
         "classesHashes",
         "testClassesHashes",
-        "artifactHashes"
+        "moduleArtifactHashes",
+        "libraryArtifactHashes",
+        "excludes"
 })
 public final class TestTaskInput {
 
@@ -32,10 +35,16 @@ public final class TestTaskInput {
     private final SortedMap<String, String> properties = new TreeMap<>();
 
     /**
-     * "$groupId:$artifactId[:$classifier]" (no version and optional classifier) -> file hash
-     * artifactName is not included in hash, only file hash with classpath sensitivity (ignore timestamp)
+     * "$groupId:$artifactId" (no version and no classifier) -> file hash
+     * Note: artifactName is not included in hash, only file hash with classpath sensitivity (ignore timestamp)
      */
-    private final SortedMap<String, String> artifactHashes = new TreeMap<>();
+    private final SortedMap<String, String> moduleArtifactHashes = new TreeMap<>();
+
+    /**
+     * "$groupId:$artifactId[:$classifier]:$version" (optional classifier) -> file hash
+     * Note: artifactName is not included in hash, only file hash with classpath sensitivity (ignore timestamp)
+     */
+    private final SortedMap<String, String> libraryArtifactHashes = new TreeMap<>();
 
     // "$groupId:$artifactId", not included in hash
     private String moduleName;
@@ -52,8 +61,10 @@ public final class TestTaskInput {
         var sw = new StringWriter();
         var pw = new PrintWriter(sw, true);
         properties.forEach((key, value) -> pw.println(key + " -> " + value));
-        // repeatable because of sorted map
-        artifactHashes.values().forEach(pw::println);
+        var artifactHashes = new TreeSet<>();
+        artifactHashes.addAll(moduleArtifactHashes.values());
+        artifactHashes.addAll(libraryArtifactHashes.values());
+        artifactHashes.forEach(pw::println);
         if (classesHashes != null) {
             classesHashes.forEach((key, value) -> pw.println(key + " -> " + value));
         }
@@ -70,12 +81,25 @@ public final class TestTaskInput {
         this.moduleName = moduleName;
     }
 
-    public void addArtifactHash(GroupArtifactId groupArtifactId, @Nullable String classifier, String hash) {
+    public void addModuleArtifactHash(GroupArtifactId groupArtifactId, String hash) {
+        var key = groupArtifactId.toString();
+        if (moduleArtifactHashes.put(key, hash) != null) {
+            throw new IllegalStateException("Duplicate classpath entry: " + key);
+        }
+    }
+
+    public void addLibraryArtifactHash(
+        GroupArtifactId groupArtifactId,
+        @Nullable String classifier,
+        String version,
+        String hash
+    ) {
         var key = groupArtifactId.toString();
         if (classifier != null && !classifier.isEmpty()) {
             key += ":" + classifier;
         }
-        if (artifactHashes.put(key, hash) != null) {
+        key += ":" + version;
+        if (libraryArtifactHashes.put(key, hash) != null) {
             throw new IllegalStateException("Duplicate classpath entry: " + key);
         }
     }
@@ -112,8 +136,12 @@ public final class TestTaskInput {
         return moduleName;
     }
 
-    public Map<String, String> getArtifactHashes() {
-        return Collections.unmodifiableMap(artifactHashes);
+    public Map<String, String> getModuleArtifactHashes() {
+        return Collections.unmodifiableMap(moduleArtifactHashes);
+    }
+
+    public Map<String, String> getLibraryArtifactHashes() {
+        return Collections.unmodifiableMap(libraryArtifactHashes);
     }
 
     public SortedMap<String, String> getIgnoredProperties() {

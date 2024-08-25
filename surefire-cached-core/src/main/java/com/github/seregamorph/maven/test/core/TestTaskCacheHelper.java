@@ -1,6 +1,7 @@
 package com.github.seregamorph.maven.test.core;
 
 import com.github.seregamorph.maven.test.common.GroupArtifactId;
+import com.github.seregamorph.maven.test.util.ProjectModuleUtils;
 import java.io.File;
 import java.time.Instant;
 import java.util.Set;
@@ -15,6 +16,8 @@ public class TestTaskCacheHelper {
     private final FileHashCache fileHashCache = new FileHashCache();
 
     public TestTaskInput getTestTaskInput(AbstractSurefireMojo task, Set<GroupArtifactId> cacheExcludes) {
+        var modules = ProjectModuleUtils.getProjectModules(task.getProject());
+
         var testTaskInput = new TestTaskInput();
         testTaskInput.addIgnoredProperty("timestamp", Instant.now().toString());
         // todo git commit hash
@@ -30,7 +33,13 @@ public class TestTaskCacheHelper {
                 // a classes directory (when "test" command is executed)
                 var file = artifact.getFile();
                 var hash = fileHashCache.getFileHash(file, FileSensitivity.CLASSPATH);
-                testTaskInput.addArtifactHash(GroupArtifactId.of(artifact), artifact.getClassifier(), hash);
+                var groupArtifactId = GroupArtifactId.of(artifact);
+                if (modules.contains(groupArtifactId)) {
+                    testTaskInput.addModuleArtifactHash(groupArtifactId, hash);
+                } else {
+                    testTaskInput.addLibraryArtifactHash(groupArtifactId, artifact.getClassifier(),
+                            artifact.getVersion(), hash);
+                }
             }
         }
         if (testClasspath.classesDir().exists()) {
