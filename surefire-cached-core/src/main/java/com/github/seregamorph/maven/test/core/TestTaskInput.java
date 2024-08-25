@@ -4,6 +4,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Collections;
@@ -69,8 +70,8 @@ public final class TestTaskInput {
         this.moduleName = moduleName;
     }
 
-    public void addArtifactHash(String groupId, String artifactId, @Nullable String classifier, String hash) {
-        var key = groupId + ":" + artifactId;
+    public void addArtifactHash(GroupArtifactId groupArtifactId, @Nullable String classifier, String hash) {
+        var key = groupArtifactId.toString();
         if (classifier != null && !classifier.isEmpty()) {
             key += ":" + classifier;
         }

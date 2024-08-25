@@ -6,6 +6,7 @@ import static com.github.seregamorph.maven.test.common.TestTaskOutput.PROP_SUFFI
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
+import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import com.github.seregamorph.maven.test.common.TaskOutcome;
 import com.github.seregamorph.maven.test.common.TestTaskOutput;
 import com.github.seregamorph.maven.test.storage.CacheStorage;
@@ -180,8 +181,7 @@ public class CachedTestWrapper {
     private CacheEntryKey getLayoutKey(TestTaskInput testTaskInput) {
         return new CacheEntryKey(
             pluginName,
-            self.getProject().getGroupId(),
-            self.getProject().getArtifactId(),
+            new GroupArtifactId(self.getProject().getGroupId(), self.getProject().getArtifactId()),
             testTaskInput.hash());
     }
 

@@ -1,6 +1,7 @@
 package com.github.seregamorph.testcacheserver.controller;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
+import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import com.github.seregamorph.testcacheserver.service.TestCacheService;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
@@ -33,7 +34,7 @@ public class TestCacheController {
         @PathVariable("file") String fileName,
         @RequestBody byte[] body
     ) {
-        var cacheEntryKey = new CacheEntryKey(pluginName, groupId, artifactId, hash);
+        var cacheEntryKey = new CacheEntryKey(pluginName, new GroupArtifactId(groupId, artifactId), hash);
         testCacheService.putCache(cacheEntryKey, fileName, body);
         return ResponseEntity.ok().build();
     }
@@ -48,7 +49,7 @@ public class TestCacheController {
         @PathVariable("hash") String hash,
         @PathVariable("file") String fileName
     ) {
-        var cacheEntryKey = new CacheEntryKey(pluginName, groupId, artifactId, hash);
+        var cacheEntryKey = new CacheEntryKey(pluginName, new GroupArtifactId(groupId, artifactId), hash);
         var body = testCacheService.getCache(cacheEntryKey, fileName);
         if (body == null) {
             return ResponseEntity.notFound().build();

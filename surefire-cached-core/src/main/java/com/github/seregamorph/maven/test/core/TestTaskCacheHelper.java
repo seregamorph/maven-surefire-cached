@@ -1,5 +1,6 @@
 package com.github.seregamorph.maven.test.core;
 
+import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import java.io.File;
 import java.time.Instant;
 import java.util.List;
@@ -30,8 +31,7 @@ public class TestTaskCacheHelper {
                 // a classes directory (when "test" command is executed)
                 var file = artifact.getFile();
                 var hash = fileHashCache.getFileHash(file, FileSensitivity.CLASSPATH);
-                testTaskInput.addArtifactHash(artifact.getGroupId(), artifact.getArtifactId(),
-                        artifact.getClassifier(), hash);
+                testTaskInput.addArtifactHash(GroupArtifactId.of(artifact), artifact.getClassifier(), hash);
             }
         }
         if (testClasspath.classesDir().exists()) {
