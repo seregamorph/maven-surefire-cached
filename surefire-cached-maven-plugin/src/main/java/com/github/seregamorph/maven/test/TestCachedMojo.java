@@ -22,11 +22,8 @@ public class TestCachedMojo extends SurefirePlugin {
 
     private final TestTaskCacheHelper testTaskCacheHelper;
 
-    @Parameter(property = "cacheStoragePath", defaultValue = "${user.home}/.m2/test-cache")
-    private String cacheStoragePath;
-
-    @Parameter(property = "cacheStorageUrl")
-    private String cacheStorageUrl;
+    @Parameter(property = "cacheStorage", defaultValue = "${user.home}/.m2/test-cache")
+    private String cacheStorage;
 
     @Parameter(property = "cacheExcludes")
     private String[] cacheExcludes;
@@ -39,8 +36,7 @@ public class TestCachedMojo extends SurefirePlugin {
     @Override
     public void execute() throws MojoExecutionException, MojoFailureException {
         var cachedTestWrapper = new CachedTestWrapper(this, testTaskCacheHelper,
-            cacheStoragePath, cacheStorageUrl,
-            cacheExcludes, PLUGIN_SUREFIRE_CACHED);
+            cacheStorage, cacheExcludes, PLUGIN_SUREFIRE_CACHED);
         cachedTestWrapper.execute(super::execute);
     }
 }

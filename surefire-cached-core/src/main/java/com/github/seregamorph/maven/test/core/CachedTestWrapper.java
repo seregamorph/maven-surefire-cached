@@ -38,25 +38,25 @@ public class CachedTestWrapper {
     public CachedTestWrapper(
         AbstractSurefireMojo self,
         TestTaskCacheHelper testTaskCacheHelper,
-        String cacheStoragePath,
-        @Nullable String cacheStorageUrl,
+        String cacheStorage,
         @Nullable
         String[] cacheExcludes,
         String pluginName
     ) {
         this.self = self;
         this.testTaskCacheHelper = testTaskCacheHelper;
-        this.cacheStorage = createCacheStorage(cacheStoragePath, cacheStorageUrl);
+        this.cacheStorage = createCacheStorage(cacheStorage);
         this.cacheExcludes = cacheExcludes == null ? List.of() : List.of(cacheExcludes);
         this.pluginName = pluginName;
     }
 
-    private static CacheStorage createCacheStorage(String cacheStoragePath, @Nullable String cacheStorageUrl) {
-        if (cacheStorageUrl != null && !cacheStorageUrl.isEmpty()) {
-            return new HttpCacheStorage(URI.create("http://localhost:8080/cache"));
+    private static CacheStorage createCacheStorage(String cacheStorage) {
+        //noinspection HttpUrlsUsage
+        if (cacheStorage.startsWith("http://") || cacheStorage.startsWith("https://")) {
+            return new HttpCacheStorage(URI.create(cacheStorage));
         }
 
-        return new FileCacheStorage(new File(cacheStoragePath));
+        return new FileCacheStorage(new File(cacheStorage));
     }
 
     private Log getLog() {
