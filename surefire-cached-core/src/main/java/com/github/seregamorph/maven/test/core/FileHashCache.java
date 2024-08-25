@@ -75,7 +75,10 @@ public class FileHashCache {
         var filteredMap = new TreeMap<>(mapHash);
         // remove MANIFEST.MF from the hash to unify hash calculation for jar files and classes directories
         filteredMap.remove("META-INF/MANIFEST.MF");
-        return HashUtils.hashArray(filteredMap.toString().getBytes(StandardCharsets.UTF_8));
+
+        var sw = new StringBuilder();
+        filteredMap.forEach((key, value) -> sw.append(key).append(":").append(value).append("\n"));
+        return HashUtils.hashArray(sw.toString().getBytes(StandardCharsets.UTF_8));
     }
 
     private record DirHashValue(String hash, long fileLastModified) {
