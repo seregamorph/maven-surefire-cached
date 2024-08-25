@@ -3,7 +3,6 @@ package com.github.seregamorph.maven.test.core;
 import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import java.io.File;
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 import javax.inject.Singleton;
 import org.apache.maven.artifact.Artifact;
@@ -15,7 +14,7 @@ public class TestTaskCacheHelper {
 
     private final FileHashCache fileHashCache = new FileHashCache();
 
-    public TestTaskInput getTestTaskInput(AbstractSurefireMojo task, List<String> cacheExcludes) {
+    public TestTaskInput getTestTaskInput(AbstractSurefireMojo task, Set<GroupArtifactId> cacheExcludes) {
         var testTaskInput = new TestTaskInput();
         testTaskInput.addIgnoredProperty("timestamp", Instant.now().toString());
         // todo git commit hash
@@ -47,9 +46,9 @@ public class TestTaskCacheHelper {
         return testTaskInput;
     }
 
-    private static boolean isIncludeToCacheEntry(Artifact artifact, List<String> cacheExcludes) {
+    private static boolean isIncludeToCacheEntry(Artifact artifact, Set<GroupArtifactId> cacheExcludes) {
         return artifact.getArtifactHandler().isAddedToClasspath()
-            && !cacheExcludes.contains(artifact.getGroupId() + ":" + artifact.getArtifactId());
+            && !cacheExcludes.contains(GroupArtifactId.of(artifact));
     }
 
     private static TestClasspath getTestClasspath(MavenProject project) {
