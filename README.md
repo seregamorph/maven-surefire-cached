@@ -71,6 +71,18 @@ For `maven-failsafe-plugin`:
 </plugin>
 ```
 
+And also add to the root `pom.xml` `<build>` or `.mvn/extensions.xml`:
+```xml
+<extensions>
+    <extension>
+        <groupId>com.github.seregamorph</groupId>
+        <artifactId>surefire-cached-extension</artifactId>
+        <version>${surefire-cached.version}</version>
+    </extension>
+</extensions>
+```
+This extension will print the cache statistics after the build.
+
 See sample migration to cached plugins:
 * [rest-api-framework](https://github.com/seregamorph/rest-api-framework/pull/2/files)
 * [spring-test-smart-context](https://github.com/seregamorph/spring-test-smart-context/pull/6/files)
