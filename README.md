@@ -10,6 +10,71 @@ separately depending on filtered test subset) for parallel execution.
 Also it does not cache so called CLI executions like `mvn surefire:test`, only lifecycle executions
 like `mvn clean test`, which is also not always convenient.
 
+## Adoption
+To adopt the plugin, the standard maven-surefire-plugin and maven-failsafe-plugin should be replaced accordingly.
+
+For `maven-surefire-plugin`:
+```xml
+<plugin>
+    <!-- Replaced with surefire-cached-maven-plugin -->
+    <artifactId>maven-surefire-plugin</artifactId>
+    <executions>
+        <execution>
+            <id>default-test</id>
+            <phase>none</phase>
+        </execution>
+    </executions>
+</plugin>
+<plugin>
+    <groupId>com.github.seregamorph</groupId>
+    <artifactId>surefire-cached-maven-plugin</artifactId>
+    <version>${surefire-cached.version}</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>test</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <!-- Take configuration from regular maven-surefire-plugin -->
+    </configuration>
+</plugin>
+```
+
+For `maven-failsafe-plugin`:
+```xml
+<plugin>
+    <groupId>com.github.seregamorph</groupId>
+    <artifactId>failsafe-cached-maven-plugin</artifactId>
+    <version>${surefire-cached.version}</version>
+    <executions>
+        <execution>
+            <goals>
+                <goal>integration-test</goal>
+            </goals>
+        </execution>
+    </executions>
+    <configuration>
+        <!-- Take configuration from regular maven-failsafe-plugin -->
+    </configuration>
+</plugin>
+<plugin>
+    <artifactId>maven-failsafe-plugin</artifactId>
+    <executions>
+        <execution>
+            <goals>
+                <goal>verify</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+
+See sample migration to cached plugins:
+* [rest-api-framework](https://github.com/seregamorph/rest-api-framework/pull/2/files)
+* [spring-test-smart-context](https://github.com/seregamorph/spring-test-smart-context/pull/6/files)
+
 First build without tests
 ```shell
 mvn clean install -DskipTests=true
