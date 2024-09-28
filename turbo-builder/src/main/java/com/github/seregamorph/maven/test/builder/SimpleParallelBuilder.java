@@ -41,14 +41,14 @@ import org.codehaus.plexus.logging.Logger;
  * as it's assumed they are already built in the previous execution.
  */
 @Singleton
-@Named("turbo")
-public class TurboBuilder implements Builder {
+@Named("simple-parallel")
+public class SimpleParallelBuilder implements Builder {
 
     private final LifecycleModuleBuilder lifecycleModuleBuilder;
     private final Logger logger;
 
     @Inject
-    public TurboBuilder(LifecycleModuleBuilder lifecycleModuleBuilder, Logger logger) {
+    public SimpleParallelBuilder(LifecycleModuleBuilder lifecycleModuleBuilder, Logger logger) {
         this.lifecycleModuleBuilder = lifecycleModuleBuilder;
         this.logger = logger;
     }
@@ -60,8 +60,8 @@ public class TurboBuilder implements Builder {
         ProjectBuildList projectBuilds,
         List<TaskSegment> taskSegments,
         ReactorBuildStatus reactorBuildStatus
-    ) throws ExecutionException, InterruptedException {
-        var turboConfig = getTurboConfig(session);
+    ) throws InterruptedException {
+        var config = getConfig(session);
 
         int nThreads = Math.min(
             session.getRequest().getDegreeOfConcurrency(),
@@ -79,7 +79,7 @@ public class TurboBuilder implements Builder {
             ProjectBuildList segmentProjectBuilds = projectBuilds.getByTaskSegment(taskSegment);
             Map<MavenProject, ProjectSegment> projectBuildMap = projectBuilds.selectSegment(taskSegment);
             try {
-                multiThreadedProjectTaskSegmentBuild(turboConfig.getPrioritizedModules(),
+                multiThreadedProjectTaskSegmentBuild(config.getPrioritizedModules(),
                     segmentProjectBuilds, reactorContext, session, service,
                     taskSegment, projectBuildMap);
                 if (reactorContext.getReactorBuildStatus().isHalted()) {
@@ -153,7 +153,7 @@ public class TurboBuilder implements Builder {
         String threadNameSuffix = duplicateArtifactIds.contains(project.getArtifactId())
             ? project.getGroupId() + ":" + project.getArtifactId()
             : project.getArtifactId();
-        currentThread.setName("turbo-builder-" + threadNameSuffix);
+        currentThread.setName("simple-builder-" + threadNameSuffix);
 
         try {
             lifecycleModuleBuilder.buildProject(
@@ -164,18 +164,18 @@ public class TurboBuilder implements Builder {
         }
     }
 
-    private TurboConfig getTurboConfig(MavenSession session) {
-        var turboConfigFile = new File(session.getExecutionRootDirectory(), ".mvn/turbo-config.json");
-        if (turboConfigFile.exists()) {
-            logger.info("Loading config from " + turboConfigFile);
+    private SimpleParallelConfig getConfig(MavenSession session) {
+        var configFile = new File(session.getExecutionRootDirectory(), ".mvn/simple-parallel.json");
+        if (configFile.exists()) {
+            logger.info("Loading config from " + configFile);
             var objectMapper = new ObjectMapper();
             try {
-                return objectMapper.readValue(turboConfigFile, TurboConfig.class);
+                return objectMapper.readValue(configFile, SimpleParallelConfig.class);
             } catch (IOException e) {
-                throw new UncheckedIOException("Error while reading " + turboConfigFile, e);
+                throw new UncheckedIOException("Error while reading " + configFile, e);
             }
         }
-        return new TurboConfig();
+        return new SimpleParallelConfig();
     }
 
     private static Set<String> gatherDuplicateArtifactIds(Set<MavenProject> projects) {

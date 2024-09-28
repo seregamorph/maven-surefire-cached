@@ -1,1 +1,1 @@
-com.github.seregamorph.maven.test.builder.TurboBuilder
+com.github.seregamorph.maven.test.builder.SimpleParallelBuilder

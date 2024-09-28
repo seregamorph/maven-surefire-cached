@@ -7,7 +7,7 @@ import java.util.List;
 @JsonIgnoreProperties({
     "//" // for comments
 })
-public class TurboConfig {
+public class SimpleParallelConfig {
 
     private List<String> prioritizedModules = new ArrayList<>();
 
