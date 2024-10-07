@@ -51,6 +51,7 @@
         <module>surefire-cached-extension</module>
         <module>surefire-cached-maven-plugin</module>
         <module>test-cache-server</module>
+        <module>turbo-builder</module>
     </modules>
 
     <build>
