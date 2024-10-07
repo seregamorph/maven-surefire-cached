@@ -51,6 +51,8 @@
         <module>surefire-cached-extension</module>
         <module>surefire-cached-maven-plugin</module>
         <module>test-cache-server</module>
+        <module>turbo-builder</module>
+        <module>turbo-builder-maven-plugin</module>
     </modules>
 
     <build>
@@ -108,6 +110,11 @@
             <dependency>
                 <groupId>com.github.seregamorph</groupId>
                 <artifactId>surefire-cached-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.seregamorph</groupId>
+                <artifactId>turbo-builder-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
