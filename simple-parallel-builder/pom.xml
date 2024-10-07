@@ -8,7 +8,7 @@
         <version>0.1-SNAPSHOT</version>
     </parent>
 
-    <artifactId>turbo-builder</artifactId>
+    <artifactId>simple-parallel-builder</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>

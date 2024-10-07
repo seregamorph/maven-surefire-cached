@@ -45,12 +45,12 @@
 
     <modules>
         <module>failsafe-cached-maven-plugin</module>
+        <module>simple-parallel-builder</module>
         <module>surefire-cached-common</module>
         <module>surefire-cached-core</module>
         <module>surefire-cached-extension</module>
         <module>surefire-cached-maven-plugin</module>
         <module>test-cache-server</module>
-        <module>turbo-builder</module>
     </modules>
 
     <build>
