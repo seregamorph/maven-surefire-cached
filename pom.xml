@@ -66,6 +66,8 @@
         <module>surefire-cached-extension</module>
         <module>surefire-cached-maven-plugin</module>
         <module>test-cache-server</module>
+        <module>test-distribution-plugin</module>
+        <module>test-distribution-provider</module>
         <module>turbo-builder</module>
     </modules>
 
@@ -202,6 +204,11 @@
             <dependency>
                 <groupId>com.github.seregamorph</groupId>
                 <artifactId>surefire-cached-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.seregamorph</groupId>
+                <artifactId>test-distribution-provider</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
