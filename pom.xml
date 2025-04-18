@@ -54,17 +54,13 @@
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
 
-        <guava.version>33.2.1-jre</guava.version>
         <jackson.version>2.17.2</jackson.version>
     </properties>
 
     <modules>
-        <module>failsafe-cached-maven-plugin</module>
         <module>simple-parallel-builder</module>
         <module>surefire-cached-common</module>
-        <module>surefire-cached-core</module>
         <module>surefire-cached-extension</module>
-        <module>surefire-cached-maven-plugin</module>
         <module>test-cache-server</module>
         <module>turbo-builder</module>
     </modules>
@@ -218,11 +214,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.apache.maven.plugin-tools</groupId>
-                <artifactId>maven-plugin-annotations</artifactId>
-                <version>${maven-plugin-tools.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
                 <version>${maven.version}</version>
@@ -232,63 +223,11 @@
                 <artifactId>maven-core</artifactId>
                 <version>${maven.version}</version>
             </dependency>
-            <dependency>
-                <groupId>org.apache.maven</groupId>
-                <artifactId>maven-plugin-api</artifactId>
-                <version>${maven.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.apache.maven.surefire</groupId>
-                <artifactId>maven-surefire-common</artifactId>
-                <version>${maven-surefire.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.maven.shared</groupId>
-                        <artifactId>maven-common-artifact-filters</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-model</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-plugin-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>${maven-surefire.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-model</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.apache.maven</groupId>
-                        <artifactId>maven-plugin-api</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
 
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>1.7.36</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.guava</groupId>
-                <artifactId>guava</artifactId>
-                <version>${guava.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>

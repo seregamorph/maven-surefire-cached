@@ -3,6 +3,7 @@ package com.github.seregamorph.maven.test.core;
 import static com.github.seregamorph.maven.test.common.TestTaskOutput.PROP_SUFFIX_TEST_CACHED_RESULT;
 import static com.github.seregamorph.maven.test.common.TestTaskOutput.PROP_SUFFIX_TEST_CACHED_TIME;
 import static com.github.seregamorph.maven.test.common.TestTaskOutput.PROP_SUFFIX_TEST_DELETED_ENTRIES;
+import static com.github.seregamorph.maven.test.core.ReflectionUtils.call;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
@@ -24,37 +25,53 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.apache.maven.execution.MavenSession;
+import org.apache.maven.plugin.Mojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
 import org.apache.maven.plugin.logging.Log;
-import org.apache.maven.plugin.surefire.AbstractSurefireMojo;
+import org.apache.maven.project.MavenProject;
 
 /**
  * @author Sergey Chernov
  */
 public class CachedTestWrapper {
 
-    private final AbstractSurefireMojo self;
+    private final MavenSession session;
+    private final MavenProject project;
+    private final Mojo delegate;
     private final TestTaskCacheHelper testTaskCacheHelper;
     private final CacheStorage cacheStorage;
     private final Set<GroupArtifactId> cacheExcludes;
     private final String pluginName;
 
+    private final Log log;
+    private final File projectBuildDirectory;
+    private final File reportsDirectory;
+
     public CachedTestWrapper(
-        AbstractSurefireMojo self,
+        MavenSession session,
+        MavenProject project,
+        Mojo delegate,
         TestTaskCacheHelper testTaskCacheHelper,
         String cacheStorage,
         @Nullable
         String[] cacheExcludes,
         String pluginName
     ) {
-        this.self = self;
+        this.session = session;
+        this.project = project;
+        this.delegate = delegate;
         this.testTaskCacheHelper = testTaskCacheHelper;
         this.cacheStorage = createCacheStorage(cacheStorage);
         this.cacheExcludes = cacheExcludes == null ? Set.of() : Stream.of(cacheExcludes)
             .map(GroupArtifactId::fromString)
             .collect(Collectors.toSet());
         this.pluginName = pluginName;
+
+        this.log = delegate.getLog();
+        this.projectBuildDirectory = new File(project.getBuild().getDirectory());
+        this.reportsDirectory = call(delegate, File.class, "getReportsDirectory");
     }
 
     private static CacheStorage createCacheStorage(String cacheStorage) {
@@ -66,32 +83,30 @@ public class CachedTestWrapper {
         return new FileCacheStorage(new File(cacheStorage));
     }
 
-    private Log getLog() {
-        return self.getLog();
-    }
-
     private void setCachedExecution(TaskOutcome result, TestTaskOutput testTaskOutput) {
-        self.getProject().getProperties().put(pluginName + PROP_SUFFIX_TEST_CACHED_RESULT, result.name());
-        self.getProject().getProperties().put(pluginName + PROP_SUFFIX_TEST_CACHED_TIME,
+        project.getProperties().put(pluginName + PROP_SUFFIX_TEST_CACHED_RESULT, result.name());
+        project.getProperties().put(pluginName + PROP_SUFFIX_TEST_CACHED_TIME,
             testTaskOutput.totalTime().toString());
 
         var message = result.message(testTaskOutput);
-        getLog().info("Cached execution "
-            + self.getProject().getGroupId() + ":" + self.getProject().getArtifactId()
+        log.info("Cached execution "
+            + project.getGroupId() + ":" + project.getArtifactId()
             + " " + result + (message == null ? "" : " " + message));
     }
 
     private void setCachedDeletion(int deleted) {
         if (deleted > 0) {
-            self.getProject().getProperties()
+            project.getProperties()
                 .put(pluginName + PROP_SUFFIX_TEST_DELETED_ENTRIES, Integer.toString(deleted));
         }
     }
 
     public void execute(MojoDelegate delegate) throws MojoExecutionException, MojoFailureException {
-        if (self.isSkip() || self.isSkipTests() || self.isSkipExec()
-            || "pom".equals(self.getProject().getPackaging())
-            || !self.getProjectBuildDirectory().exists()) {
+        if (call(this.delegate, Boolean.class, "isSkip")
+            || call(this.delegate, Boolean.class, "isSkipTests")
+            || call(this.delegate, Boolean.class, "isSkipExec")
+            || "pom".equals(project.getPackaging())
+            || !projectBuildDirectory.exists()) {
             delegate.execute();
             return;
         }
@@ -99,10 +114,9 @@ public class CachedTestWrapper {
         var startTime = Instant.now();
 
         // todo support jacoco coverage file
-        var reportsDirectory = self.getReportsDirectory();
         MoreFileUtils.delete(reportsDirectory);
 
-        var skipCache = isEmptyOrTrue(self.getSession().getSystemProperties().getProperty("skipCache"));
+        var skipCache = isEmptyOrTrue(session.getSystemProperties().getProperty("skipCache"));
         if (skipCache) {
             delegate.execute();
             var testTaskOutput = getTaskOutput(startTime, Instant.now());
@@ -110,21 +124,21 @@ public class CachedTestWrapper {
             return;
         }
 
-        var taskInputFile = new File(self.getProjectBuildDirectory(), getTaskInputFileName());
-        var taskOutputFile = new File(self.getProjectBuildDirectory(), getTaskOutputFileName());
+        var taskInputFile = new File(projectBuildDirectory, getTaskInputFileName());
+        var taskOutputFile = new File(projectBuildDirectory, getTaskOutputFileName());
         MoreFileUtils.delete(taskInputFile);
         MoreFileUtils.delete(taskOutputFile);
 
         // todo include surefire/failsafe plugin name
-        var testTaskInput = testTaskCacheHelper.getTestTaskInput(self, cacheExcludes);
+        var testTaskInput = testTaskCacheHelper.getTestTaskInput(project, this.delegate, cacheExcludes);
         var testTaskInputBytes = JsonSerializers.serialize(testTaskInput);
-        getLog().debug(new String(testTaskInputBytes, UTF_8));
+        log.debug(new String(testTaskInputBytes, UTF_8));
         MoreFileUtils.write(taskInputFile, testTaskInputBytes);
         var cacheEntryKey = getLayoutKey(testTaskInput);
 
         var testTaskOutputBytes = cacheStorage.read(cacheEntryKey, getTaskOutputFileName());
         if (testTaskOutputBytes == null) {
-            getLog().info("Cache miss " + cacheEntryKey);
+            log.info("Cache miss " + cacheEntryKey);
             boolean thrown = true;
             try {
                 delegate.execute();
@@ -133,10 +147,10 @@ public class CachedTestWrapper {
                 var testTaskOutput = getTaskOutput(startTime, Instant.now());
                 MoreFileUtils.write(taskOutputFile, JsonSerializers.serialize(testTaskOutput));
                 if (testTaskOutput.totalErrors() > 0 || testTaskOutput.totalFailures() > 0) {
-                    getLog().warn("Tests failed, not storing to cache. See " + reportsDirectory);
+                    log.warn("Tests failed, not storing to cache. See " + reportsDirectory);
                     setCachedExecution(TaskOutcome.FAILED, testTaskOutput);
                 } else if (!thrown) {
-                    getLog().info("Storing reports to cache from " + reportsDirectory);
+                    log.info("Storing reports to cache from " + reportsDirectory);
                     var deleted = storeCache(cacheEntryKey, testTaskInput, testTaskOutput);
                     var result = testTaskOutput.totalTests() == 0 ? TaskOutcome.EMPTY : TaskOutcome.SUCCESS;
                     setCachedExecution(result, testTaskOutput);
@@ -145,9 +159,9 @@ public class CachedTestWrapper {
             }
         } else {
             MoreFileUtils.write(taskOutputFile, testTaskOutputBytes);
-            getLog().info("Cache hit " + cacheEntryKey);
+            log.info("Cache hit " + cacheEntryKey);
             var testTaskOutput = JsonSerializers.deserialize(testTaskOutputBytes, TestTaskOutput.class);
-            getLog().info("Restoring reports from cache to " + reportsDirectory);
+            log.info("Restoring reports from cache to " + reportsDirectory);
             restoreCache(cacheEntryKey, testTaskOutput);
             setCachedExecution(TaskOutcome.FROM_CACHE, testTaskOutput);
         }
@@ -159,8 +173,8 @@ public class CachedTestWrapper {
         for (Map.Entry<String, String> entry : testTaskOutput.files().entrySet()) {
             var unpackedName = entry.getKey();
             var packedName = entry.getValue();
-            var file = new File(self.getProjectBuildDirectory(), unpackedName);
-            var zipFile = new File(self.getProjectBuildDirectory(), packedName);
+            var file = new File(projectBuildDirectory, unpackedName);
+            var zipFile = new File(projectBuildDirectory, packedName);
             MoreFileUtils.delete(zipFile);
             ZipUtils.zipDirectory(file, zipFile);
             deleted += cacheStorage.write(cacheEntryKey, packedName, MoreFileUtils.read(zipFile));
@@ -177,9 +191,9 @@ public class CachedTestWrapper {
                 throw new IllegalStateException("Cache file not found " + cacheEntryKey + " " + packedName);
             }
 
-            var zipFile = new File(self.getProjectBuildDirectory(), packedName);
+            var zipFile = new File(projectBuildDirectory, packedName);
             MoreFileUtils.write(zipFile, packedContent);
-            var unpackedFile = new File(self.getProjectBuildDirectory(), unpackedName);
+            var unpackedFile = new File(projectBuildDirectory, unpackedName);
             MoreFileUtils.delete(unpackedFile);
             ZipUtils.unzipDirectory(zipFile, unpackedFile);
         });
@@ -188,12 +202,12 @@ public class CachedTestWrapper {
     private CacheEntryKey getLayoutKey(TestTaskInput testTaskInput) {
         return new CacheEntryKey(
             pluginName,
-            new GroupArtifactId(self.getProject().getGroupId(), self.getProject().getArtifactId()),
+            new GroupArtifactId(project.getGroupId(), project.getArtifactId()),
             testTaskInput.hash());
     }
 
     private TestTaskOutput getTaskOutput(Instant startTime, Instant endTime) {
-        var testReports = self.getReportsDirectory().listFiles((dir, name) ->
+        var testReports = reportsDirectory.listFiles((dir, name) ->
             name.startsWith("TEST-") && name.endsWith(".xml"));
 
         if (testReports == null) {
@@ -215,7 +229,7 @@ public class CachedTestWrapper {
         }
 
         var files = new TreeMap<String, String>();
-        files.put(self.getReportsDirectory().getName(), getReportsZipName());
+        files.put(reportsDirectory.getName(), getReportsZipName());
         // todo add jacoco coverage file
 
         return new TestTaskOutput(startTime, endTime,
@@ -231,7 +245,7 @@ public class CachedTestWrapper {
     }
 
     private String getReportsZipName() {
-        return self.getReportsDirectory().getName() + ".zip";
+        return reportsDirectory.getName() + ".zip";
     }
 
     private static boolean isEmptyOrTrue(String value) {

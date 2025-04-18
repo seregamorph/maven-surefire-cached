@@ -13,7 +13,7 @@ public final class JsonSerializers {
 
     private static final ObjectMapper mapper = new ObjectMapper()
         .enable(SerializationFeature.INDENT_OUTPUT)
-        .findAndRegisterModules()
+        .registerModules(ObjectMapper.findModules(JsonSerializers.class.getClassLoader()))
         .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
     public static byte[] serialize(Object obj) {

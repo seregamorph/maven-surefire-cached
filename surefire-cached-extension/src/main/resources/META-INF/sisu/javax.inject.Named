@@ -1,1 +1,3 @@
+com.github.seregamorph.maven.test.common.TestTaskCacheHelper
+com.github.seregamorph.maven.test.extension.CachedMavenPluginManager
 com.github.seregamorph.maven.test.extension.CachedTestLifecycleParticipant

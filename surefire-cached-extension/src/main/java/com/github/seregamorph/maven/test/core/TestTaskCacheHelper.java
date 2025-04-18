@@ -1,13 +1,16 @@
 package com.github.seregamorph.maven.test.core;
 
+import static com.github.seregamorph.maven.test.core.ReflectionUtils.call;
+
 import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import com.github.seregamorph.maven.test.util.ProjectModuleUtils;
 import java.io.File;
 import java.time.Instant;
+import java.util.List;
 import java.util.Set;
 import javax.inject.Singleton;
 import org.apache.maven.artifact.Artifact;
-import org.apache.maven.plugin.surefire.AbstractSurefireMojo;
+import org.apache.maven.plugin.Mojo;
 import org.apache.maven.project.MavenProject;
 
 /**
@@ -18,14 +21,14 @@ public class TestTaskCacheHelper {
 
     private final FileHashCache fileHashCache = new FileHashCache();
 
-    public TestTaskInput getTestTaskInput(AbstractSurefireMojo task, Set<GroupArtifactId> cacheExcludes) {
-        var modules = ProjectModuleUtils.getProjectModules(task.getProject());
+    public TestTaskInput getTestTaskInput(MavenProject project, Mojo delegate, Set<GroupArtifactId> cacheExcludes) {
+        var modules = ProjectModuleUtils.getProjectModules(project);
 
         var testTaskInput = new TestTaskInput();
         testTaskInput.addIgnoredProperty("timestamp", Instant.now().toString());
         // todo git commit hash
 
-        var pluginArtifacts = task.getProject().getPluginArtifacts();
+        var pluginArtifacts = project.getPluginArtifacts();
         for (var pluginArtifact : pluginArtifacts) {
             var file = pluginArtifact.getFile();
             // now the file is always null, enhance the caching key on demand
@@ -38,8 +41,8 @@ public class TestTaskCacheHelper {
         // todo add java version
         // todo system properties
 
-        testTaskInput.setModuleName(task.getProject().getGroupId() + ":" + task.getProject().getArtifactId());
-        var testClasspath = getTestClasspath(task.getProject());
+        testTaskInput.setModuleName(project.getGroupId() + ":" + project.getArtifactId());
+        var testClasspath = getTestClasspath(project);
         for (var artifact : testClasspath.artifacts()) {
             if (isIncludeToCacheEntry(artifact, cacheExcludes)) {
                 // can be a jar file (when "install" command is executed) or
@@ -62,9 +65,9 @@ public class TestTaskCacheHelper {
             testTaskInput.setTestClassesHashes(HashUtils.hashDirectory(testClasspath.testClassesDir()));
         }
         // todo support additional files like logback.xml not in the classpath
-        testTaskInput.setArgLine(task.getArgLine());
-        testTaskInput.setTest(task.getTest());
-        testTaskInput.setExcludes(task.getExcludes());
+        testTaskInput.setArgLine(call(delegate, String.class, "getArgLine"));
+        testTaskInput.setTest(call(delegate, String.class, "getTest"));
+        testTaskInput.setExcludes(call(delegate, List.class, "getExcludes"));
         return testTaskInput;
     }
 
