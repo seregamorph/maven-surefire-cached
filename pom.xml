@@ -60,6 +60,7 @@
     </properties>
 
     <modules>
+        <module>local-workspace-reader</module>
         <module>simple-parallel-builder</module>
         <module>surefire-cached-common</module>
         <module>surefire-cached-extension</module>
