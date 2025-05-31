@@ -78,6 +78,8 @@ public class TestPluginConfigLoader {
                 TestPluginConfig::getInputIgnoredProperties))
             .setExcludeModules(resolveProperty(primaryConfig, defaultConfig,
                 TestPluginConfig::getExcludeModules))
+            .setExcludeClasspathResources(resolveProperty(primaryConfig, defaultConfig,
+                TestPluginConfig::getExcludeClasspathResources))
             .setArtifacts(resolveProperty(primaryConfig, defaultConfig,
                 TestPluginConfig::getArtifacts));
     }

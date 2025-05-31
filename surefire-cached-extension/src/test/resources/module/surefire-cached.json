@@ -1,0 +1,21 @@
+{
+  "common": {
+    "excludeModules": [
+      "com.acme:core"
+    ]
+  },
+  "surefire": {
+    "artifacts": {
+      "surefire-reports": {
+        "includes": [
+          "surefire-reports/TEST-*.xml"
+        ]
+      },
+      "jacoco": {
+        "includes": [
+          "jacoco-*.exec"
+        ]
+      }
+    }
+  }
+}

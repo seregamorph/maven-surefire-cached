@@ -10,6 +10,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -39,13 +40,16 @@ public final class HashUtils {
      * @return zip entry hash sums
      */
     @Contract(pure = true)
-    public static SortedMap<String, String> hashZipFile(File file) {
+    public static SortedMap<String, String> hashZipFile(File file, List<String> excludePathPatterns) {
         var map = new TreeMap<String, String>();
         try (var zipStream = new ZipInputStream(new FileInputStream(file))) {
             ZipEntry zipEntry;
             while ((zipEntry = zipStream.getNextEntry()) != null) {
                 if (!zipEntry.isDirectory()) {
-                    map.put(zipEntry.getName(), hashStream(zipStream));
+                    var entryName = zipEntry.getName();
+                    if (include(excludePathPatterns, entryName)) {
+                        map.put(entryName, hashStream(zipStream));
+                    }
                 }
             }
         } catch (IOException e) {
@@ -81,28 +85,49 @@ public final class HashUtils {
      * Calculate hash sums of files from the directory
      *
      * @param dir
+     * @param excludePathPatterns
      * @return directory entry (relative path) hash sums
      */
     @Contract(pure = true)
-    public static SortedMap<String, String> hashDirectory(File dir) {
+    public static SortedMap<String, String> hashDirectory(File dir, List<String> excludePathPatterns) {
         var map = new TreeMap<String, String>();
-        hashDirectory(map, dir.toPath(), dir.toPath());
+        hashDirectory(map, dir.toPath(), dir.toPath(), excludePathPatterns);
         return map;
     }
 
-    private static void hashDirectory(Map<String, String> map, Path baseDir, Path dir) {
+    private static void hashDirectory(
+        Map<String, String> map,
+        Path baseDir,
+        Path dir,
+        List<String> excludePathPatterns
+    ) {
         try (var directoryStream = Files.newDirectoryStream(dir)) {
             for (Path path : directoryStream) {
                 if (Files.isDirectory(path)) {
-                    hashDirectory(map, baseDir, path);
+                    hashDirectory(map, baseDir, path, excludePathPatterns);
                 } else {
-                    var relativePath = baseDir.relativize(path);
-                    map.put(relativePath.toString(), hashFile(path.toFile()));
+                    var relativePath = baseDir.relativize(path).toString();
+                    if (include(excludePathPatterns, relativePath)) {
+                        map.put(relativePath, hashFile(path.toFile()));
+                    }
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+    }
+
+    private static boolean include(List<String> excludePathPatterns, String relativePath) {
+        if (excludePathPatterns.isEmpty()) {
+            return true;
+        }
+        var antPathMatcher = new AntPathMatcher();
+        for (var excludePathPattern : excludePathPatterns) {
+            if (antPathMatcher.match(excludePathPattern, relativePath)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     @Contract(pure = true)

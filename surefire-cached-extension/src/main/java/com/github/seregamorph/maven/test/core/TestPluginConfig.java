@@ -14,6 +14,13 @@ public class TestPluginConfig {
         .setInputProperties(List.of("java.specification.version"))
         .setInputIgnoredProperties(List.of())
         .setExcludeModules(List.of())
+        // remove MANIFEST.MF and default maven descriptors with version
+        // from the hash to unify hash calculation for jar files and classes directories
+        .setExcludeClasspathResources(List.of(
+            "META-INF/MANIFEST.MF",
+            "META-INF/maven/**/pom.properties",
+            "META-INF/maven/**/pom.xml"
+        ))
         .setArtifacts(Map.of());
 
     /**
@@ -43,6 +50,12 @@ public class TestPluginConfig {
      */
     private List<String> excludeModules;
 
+    /**
+     * List of classpath resources that should be ignored in input hash calculation. Ant wildcard expressions are also
+     * supported.
+     */
+    private List<String> excludeClasspathResources;
+
     private Map<String, SurefireCachedConfig.ArtifactsConfig> artifacts;
 
     public TestPluginConfig setInputProperties(List<String> inputProperties) {
@@ -57,6 +70,11 @@ public class TestPluginConfig {
 
     public TestPluginConfig setExcludeModules(List<String> excludeModules) {
         this.excludeModules = excludeModules;
+        return this;
+    }
+
+    public TestPluginConfig setExcludeClasspathResources(List<String> excludeClasspathResources) {
+        this.excludeClasspathResources = excludeClasspathResources;
         return this;
     }
 
@@ -77,6 +95,10 @@ public class TestPluginConfig {
         return excludeModules;
     }
 
+    public List<String> getExcludeClasspathResources() {
+        return excludeClasspathResources;
+    }
+
     public Map<String, SurefireCachedConfig.ArtifactsConfig> getArtifacts() {
         return artifacts;
     }
@@ -87,6 +109,7 @@ public class TestPluginConfig {
             "inputProperties=" + inputProperties +
             ", inputIgnoredProperties=" + inputIgnoredProperties +
             ", excludeModules=" + excludeModules +
+            ", excludeClasspathResources=" + excludeClasspathResources +
             ", artifacts=" + artifacts +
             '}';
     }

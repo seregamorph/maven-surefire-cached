@@ -33,6 +33,7 @@ import javax.annotation.Nullable;
         "testClassesHashes",
         "moduleArtifactHashes",
         "libraryArtifactHashes",
+        "excludeClasspathResources",
         "artifactConfigs",
         "excludes"
 })
@@ -74,6 +75,8 @@ public final class TestTaskInput {
     private List<String> activeProfiles;
     private String argLine;
     private String test;
+    // ignore in hash calculation as it's already affecting it
+    private List<String> excludeClasspathResources;
     private Map<String, SurefireCachedConfig.ArtifactsConfig> artifactConfigs;
     private String groups;
     private String excludedGroups;
@@ -194,6 +197,10 @@ public final class TestTaskInput {
         this.test = test;
     }
 
+    public void setExcludeClasspathResources(List<String> excludeClasspathResources) {
+        this.excludeClasspathResources = excludeClasspathResources;
+    }
+
     public void setArtifactConfigs(Map<String, SurefireCachedConfig.ArtifactsConfig> artifactConfigs) {
         this.artifactConfigs = artifactConfigs;
     }
@@ -256,6 +263,10 @@ public final class TestTaskInput {
 
     public String getTest() {
         return test;
+    }
+
+    public List<String> getExcludeClasspathResources() {
+        return excludeClasspathResources;
     }
 
     public Map<String, SurefireCachedConfig.ArtifactsConfig> getArtifactConfigs() {

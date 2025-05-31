@@ -7,8 +7,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.SortedMap;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import org.slf4j.Logger;
@@ -24,11 +25,11 @@ public class FileHashCache {
     /**
      * "$canonicalAbsoluteFileName:$sensitivity" -> file hash
      */
-    private final Cache<String, FileHashValue> cacheFiles;
+    private final Cache<CacheKey, FileHashValue> cacheFiles;
     /**
      * "$canonicalAbsoluteDirName" -> directory hash
      */
-    private final Cache<String, DirHashValue> cacheDirectories;
+    private final Cache<CacheKey, DirHashValue> cacheDirectories;
 
     public FileHashCache() {
         cacheFiles = CacheBuilder.newBuilder().build();
@@ -41,15 +42,18 @@ public class FileHashCache {
      * <p>
      * Note: this method will calculate the same hash sum for class directory and jar archive of the same directory.
      *
-     * @param file class directory or JAR file
+     * @param file                      class directory or JAR file
+     * @param excludePathPatterns ant expressions of classpath resources that should be skipped in hash
+     *                                  calculation
      * @return aggregated hash sum
      */
-    public String getClasspathElementHash(File file) {
+    public String getClasspathElementHash(File file, List<String> excludePathPatterns) {
         try {
-            var cacheKey = file.getCanonicalFile().getAbsolutePath();
+            var cacheKey = new CacheKey(file.getCanonicalFile().getAbsolutePath(),
+                new ArrayList<>(excludePathPatterns));
             if (file.isDirectory()) {
                 Callable<DirHashValue> loader = () -> {
-                    var hash = plainHash(HashUtils.hashDirectory(file));
+                    var hash = plainHash(HashUtils.hashDirectory(file, excludePathPatterns));
                     return new DirHashValue(hash, file.lastModified());
                 };
                 var fileHashValue = cacheDirectories.get(cacheKey, loader);
@@ -62,7 +66,7 @@ public class FileHashCache {
             } else if (file.exists()) {
                 Callable<FileHashValue> loader = () -> {
                     // calculate has hums of zip entries ignoring timestamps
-                    var hash = plainHash(HashUtils.hashZipFile(file));
+                    var hash = plainHash(HashUtils.hashZipFile(file, excludePathPatterns));
                     return new FileHashValue(hash, file.length(), file.lastModified());
                 };
                 var fileHashValue = cacheFiles.get(cacheKey, loader);
@@ -85,18 +89,17 @@ public class FileHashCache {
         }
     }
 
-    private static String plainHash(Map<String, String> mapHash) {
-        var filteredMap = new TreeMap<>(mapHash);
-        // remove MANIFEST.MF from the hash to unify hash calculation for jar files and classes directories
-        filteredMap.remove("META-INF/MANIFEST.MF");
-
-        if (filteredMap.isEmpty()) {
+    private static String plainHash(SortedMap<String, String> mapHash) {
+        if (mapHash.isEmpty()) {
             return HashUtils.HASH_EMPTY_FILE_COLLECTION;
         }
 
         var sw = new StringBuilder();
-        filteredMap.forEach((key, value) -> sw.append(key).append(":").append(value).append("\n"));
+        mapHash.forEach((key, value) -> sw.append(key).append(":").append(value).append("\n"));
         return HashUtils.hashArray(sw.toString().getBytes(StandardCharsets.UTF_8));
+    }
+
+    private record CacheKey(String absoluteFileName, List<String> excludeClasspathResources) {
     }
 
     private record DirHashValue(String hash, long fileLastModified) {

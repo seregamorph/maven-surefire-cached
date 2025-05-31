@@ -44,7 +44,14 @@ the extension will go thru the parent modules (till root) and try to find it the
       "env.GITHUB_JOB",
       "env.GITHUB_SHA"
     ],
-    "excludeModules": ["com.acme:core"]
+    "excludeModules": ["com.acme:core"],
+    "excludeClasspathResources": [
+      "META-INF/MANIFEST.MF",
+      "META-INF/maven/**/pom.properties",
+      "META-INF/maven/**/pom.xml",
+      "META-INF/maven/plugin.xml",
+      "META-INF/maven/**/plugin-help.xml"
+    ]
   },
   "surefire": {
     "artifacts": {

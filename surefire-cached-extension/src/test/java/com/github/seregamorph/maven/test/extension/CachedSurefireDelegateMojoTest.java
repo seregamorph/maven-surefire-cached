@@ -21,15 +21,18 @@ public class CachedSurefireDelegateMojoTest {
 
     @Test
     public void shouldReadConfig() {
-        var testPomResource = getResourceURI("test-pom.xml");
-        var testPomFile = new File(testPomResource.getPath());
-        var basedir = testPomFile.getParentFile();
-
-        var build = new Build();
-        build.setDirectory(new File(basedir, "target").getAbsolutePath());
+        var testPomFile = getResourceFile("module/module-pom.xml");
         var project = new MavenProject();
         project.setFile(testPomFile);
+
+        var build = new Build();
+        build.setDirectory(new File(project.getBasedir(), "target").getAbsolutePath());
         project.setBuild(build);
+
+        var parentProject = new MavenProject();
+        parentProject.setFile(getResourceFile("parent-pom.xml"));
+
+        project.setParent(parentProject);
 
         var userProperties = new Properties();
         var session = mock(MavenSession.class);
@@ -45,16 +48,23 @@ public class CachedSurefireDelegateMojoTest {
 
         var config = cachedDelegateMojo.loadEffectiveTestPluginConfig(pluginName);
         assertEquals(List.of("com.acme:core"), config.getExcludeModules());
-        assertEquals(List.of("surefire-reports/TEST-*.xml"), config.getArtifacts().get("surefire-reports").getIncludes());
+        assertEquals(List.of("META-INF/MANIFEST.MF", "META-INF/maven/plugin.xml",
+            "META-INF/maven/**/plugin-help.xml"), config.getExcludeClasspathResources());
+        assertEquals(List.of("surefire-reports/TEST-*.xml"),
+            config.getArtifacts().get("surefire-reports").getIncludes());
         assertEquals(List.of("jacoco-*.exec"), config.getArtifacts().get("jacoco").getIncludes());
     }
 
+    private static File getResourceFile(String name) {
+        return new File(getResourceURI(name));
+    }
+
     private static URI getResourceURI(String name) {
+        URL resource = CachedSurefireDelegateMojoTest.class.getClassLoader().getResource(name);
+        if (resource == null) {
+            throw new RuntimeException("Resource not found: " + name);
+        }
         try {
-            URL resource = CachedSurefireDelegateMojoTest.class.getClassLoader().getResource(name);
-            if (resource == null) {
-                throw new RuntimeException("Resource not found: " + name);
-            }
             return resource.toURI();
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);

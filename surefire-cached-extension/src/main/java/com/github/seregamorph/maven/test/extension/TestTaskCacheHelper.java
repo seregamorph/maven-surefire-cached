@@ -129,7 +129,7 @@ public class TestTaskCacheHelper {
             var pluginArtifacts = pluginDescriptor.getArtifacts();
             for (var pluginArtifact : pluginArtifacts) {
                 var file = pluginArtifact.getFile();
-                var hash = file == null ? null : fileHashCache.getClasspathElementHash(file);
+                var hash = file == null ? null : fileHashCache.getClasspathElementHash(file, List.of());
                 var groupArtifactId = groupArtifactId(pluginArtifact);
                 testTaskInput.addPluginArtifactHash(groupArtifactId, pluginArtifact.getClassifier(),
                     pluginArtifact.getVersion(), hash);
@@ -147,26 +147,29 @@ public class TestTaskCacheHelper {
                 // a classes directory (when "test" command is executed).
                 // The trick is we calculate hash of files which is the same in both cases (jar manifest is ignored)
                 var file = artifact.getFile();
-                var hash = fileHashCache.getClasspathElementHash(file);
+                var hash = fileHashCache.getClasspathElementHash(file, testPluginConfig.getExcludeClasspathResources());
                 var groupArtifactId = groupArtifactId(artifact);
                 var suffix = file.isDirectory() ? "@dir" : "@" + artifact.getType();
                 if (modules.contains(groupArtifactId)) {
                     testTaskInput.addModuleArtifactHash(groupArtifactId + suffix, hash);
                 } else {
                     testTaskInput.addLibraryArtifactHash(groupArtifactId, artifact.getClassifier(),
-                            artifact.getVersion(), hash);
+                        artifact.getVersion(), hash);
                 }
             }
         }
         if (testClasspath.classesDir().exists()) {
-            testTaskInput.setClassesHashes(HashUtils.hashDirectory(testClasspath.classesDir()));
+            testTaskInput.setClassesHashes(HashUtils.hashDirectory(testClasspath.classesDir(),
+                testPluginConfig.getExcludeClasspathResources()));
         }
         if (testClasspath.testClassesDir().exists()) {
-            testTaskInput.setTestClassesHashes(HashUtils.hashDirectory(testClasspath.testClassesDir()));
+            testTaskInput.setTestClassesHashes(HashUtils.hashDirectory(testClasspath.testClassesDir(),
+                testPluginConfig.getExcludeClasspathResources()));
         }
         testTaskInput.setActiveProfiles(activeProfiles);
         testTaskInput.setArgLine(call(delegate, String.class, "getArgLine"));
         testTaskInput.setTest(call(delegate, String.class, "getTest"));
+        testTaskInput.setExcludeClasspathResources(testPluginConfig.getExcludeClasspathResources());
         testTaskInput.setArtifactConfigs(testPluginConfig.getArtifacts());
         testTaskInput.setGroups(call(delegate, String.class, "getGroups"));
         testTaskInput.setExcludedGroups(call(delegate, String.class, "getExcludedGroups"));
