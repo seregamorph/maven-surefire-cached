@@ -25,14 +25,19 @@ import org.apache.commons.io.IOUtils;
  */
 public final class ZipUtils {
 
+    public record PackedFile(String fileName, long unpackedSize) {
+    }
+
     /**
      * Pack directory filtered included files to TAR.GZ
      *
      * @param directory
      * @param includes
      * @param packFile  target tar.gz file
+     * @return packed files info
      */
-    public static void packDirectory(File directory, List<String> includes, File packFile) {
+    public static List<PackedFile> packDirectory(File directory, List<String> includes, File packFile) {
+        var packedFiles = new ArrayList<PackedFile>();
         try (OutputStream fos = new FileOutputStream(packFile);
              BufferedOutputStream bos = new BufferedOutputStream(fos);
              GzipCompressorOutputStream gzos = new GzipCompressorOutputStream(bos);
@@ -52,11 +57,13 @@ public final class ZipUtils {
                         IOUtils.copy(fis, taos);
                     }
                     taos.closeArchiveEntry();
+                    packedFiles.add(new PackedFile(fileName, file.length()));
                 }
             }
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
+        return packedFiles;
     }
 
     public static void unpackDirectory(File packFile, File targetDirectory) {

@@ -46,7 +46,7 @@ public final class TestTaskInput {
     /**
      * Updated on each breaking change
      */
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
 
     private String hash;
 

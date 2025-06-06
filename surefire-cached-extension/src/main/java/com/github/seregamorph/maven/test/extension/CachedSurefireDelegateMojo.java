@@ -7,6 +7,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
 import com.github.seregamorph.maven.test.common.GroupArtifactId;
+import com.github.seregamorph.maven.test.common.OutputArtifact;
 import com.github.seregamorph.maven.test.common.PluginName;
 import com.github.seregamorph.maven.test.common.TestTaskOutput;
 import com.github.seregamorph.maven.test.config.ArtifactsConfig;
@@ -28,7 +29,6 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
-import javax.annotation.Nullable;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.Mojo;
@@ -109,7 +109,7 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
         if (skipCache) {
             log.info("Skipping cache for " + project.getGroupId() + ":" + project.getArtifactId());
             delegate.execute();
-            var testTaskOutput = getTaskOutput(null, startTime, Instant.now());
+            var testTaskOutput = getTaskOutput(startTime, Instant.now());
             reportCachedExecution(TaskOutcome.SKIPPED_CACHE, testTaskOutput);
             return;
         }
@@ -156,7 +156,7 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
             log.error("Test execution failed", e);
             throw e;
         } finally {
-            var testTaskOutput = getTaskOutput(testPluginConfig, startTime, Instant.now());
+            var testTaskOutput = getTaskOutput(startTime, Instant.now());
             MoreFileUtils.write(taskOutputFile, JsonSerializers.serialize(testTaskOutput));
             // note that failsafe plugin does not throw exceptions on test failures
             if (testTaskOutput.totalErrors() > 0 || testTaskOutput.totalFailures() > 0) {
@@ -213,11 +213,15 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
         for (Map.Entry<String, ArtifactsConfig> entry : testPluginConfig.getArtifacts().entrySet()) {
             var alias = entry.getKey();
             var artifactsConfig = entry.getValue();
-            var artifactPackName = getArtifactPackName(alias);
-            var packFile = new File(projectBuildDirectory, artifactPackName);
+            var fileName = getArtifactPackName(alias);
+            var packFile = new File(projectBuildDirectory, fileName);
             MoreFileUtils.delete(packFile);
-            ZipUtils.packDirectory(projectBuildDirectory, artifactsConfig.getIncludes(), packFile);
-            deleted += cacheService.write(cacheEntryKey, artifactPackName, MoreFileUtils.read(packFile));
+            var packedFiles = ZipUtils.packDirectory(projectBuildDirectory, artifactsConfig.getIncludes(), packFile);
+            deleted += cacheService.write(cacheEntryKey, fileName, MoreFileUtils.read(packFile));
+            long unpackedSize = packedFiles.stream().mapToLong(ZipUtils.PackedFile::unpackedSize).sum();
+            OutputArtifact outputArtifact = new OutputArtifact(fileName, packedFiles.size(),
+                unpackedSize, packFile.length());
+            testTaskOutput.artifacts().put(alias, outputArtifact);
         }
         var testTaskOutputBytes = JsonSerializers.serialize(testTaskOutput);
         deleted += cacheService.write(cacheEntryKey, getTaskOutputFileName(), testTaskOutputBytes);
@@ -225,14 +229,14 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
     }
 
     private void restoreCache(CacheEntryKey cacheEntryKey, TestTaskOutput testTaskOutput) throws InconsistentCacheException {
-        for (Map.Entry<String, String> entry : testTaskOutput.files().entrySet()) {
-            String packedName = entry.getValue();
-            var packedContent = cacheService.read(cacheEntryKey, packedName);
+        for (Map.Entry<String, OutputArtifact> entry : testTaskOutput.artifacts().entrySet()) {
+            var fileName = entry.getValue().fileName();
+            var packedContent = cacheService.read(cacheEntryKey, fileName);
             if (packedContent == null) {
-                throw new InconsistentCacheException("Cache file not found " + cacheEntryKey + " " + packedName);
+                throw new InconsistentCacheException("Cache file not found " + cacheEntryKey + " " + fileName);
             }
 
-            var packFile = new File(projectBuildDirectory, packedName);
+            var packFile = new File(projectBuildDirectory, fileName);
             MoreFileUtils.write(packFile, packedContent);
             ZipUtils.unpackDirectory(packFile, projectBuildDirectory);
             MoreFileUtils.delete(packFile);
@@ -240,7 +244,6 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
     }
 
     private TestTaskOutput getTaskOutput(
-        @Nullable TestPluginConfig testPluginConfig,
         Instant startTime,
         Instant endTime
     ) {
@@ -268,15 +271,10 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
             }
         }
 
-        var files = new TreeMap<String, String>();
-        if (testPluginConfig != null) {
-            testPluginConfig.getArtifacts().keySet().forEach(alias -> {
-                files.put(alias, getArtifactPackName(alias));
-            });
-        }
-
+        // artifacts are filled before saving
+        var artifacts = new TreeMap<String, OutputArtifact>();
         return new TestTaskOutput(startTime, endTime, getTotalTimeSeconds(startTime, endTime),
-            totalClasses, totalTestTimeSeconds, totalTests, totalErrors, totalFailures, files);
+            totalClasses, totalTestTimeSeconds, totalTests, totalErrors, totalFailures, artifacts);
     }
 
     private static String getArtifactPackName(String alias) {

@@ -1,5 +1,6 @@
 package com.github.seregamorph.maven.test.common;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
@@ -7,6 +8,7 @@ import java.util.Map;
 /**
  * @author Sergey Chernov
  */
+@JsonIgnoreProperties(ignoreUnknown = true) // for forward compatibility
 public record TestTaskOutput(
     Instant startTime,
     Instant endTime,
@@ -23,8 +25,7 @@ public record TestTaskOutput(
     int totalTests,
     int totalErrors,
     int totalFailures,
-    // alias -> packed target name
-    Map<String, String> files
+    // alias -> artifact
+    Map<String, OutputArtifact> artifacts
 ) {
-
 }
