@@ -8,11 +8,9 @@ import java.time.Duration;
  */
 public record HttpCacheStorageConfig(
     URI baseUrl,
+    boolean checkServerVersion,
     Duration connectTimeout,
     Duration readTimeout,
     Duration writeTimeout
 ) {
-    public HttpCacheStorageConfig(URI baseUrl) {
-        this(baseUrl, Duration.ofSeconds(5L), Duration.ofSeconds(10L), Duration.ofSeconds(10L));
-    }
 }

@@ -47,8 +47,9 @@ public class TestTaskCacheHelper {
             .collect(Collectors.toCollection(TreeSet::new));
 
         this.metrics = new CacheServiceMetrics();
-        this.cacheStorage = CacheStorageFactory.createCacheStorage(session);
-        this.cacheService = new CacheService(cacheStorage, metrics, 2);
+        this.cacheStorage = new CacheStorageFactory(session).createCacheStorage();
+        // todo configurable failureThreshold
+        this.cacheService = new CacheService(cacheStorage, metrics, 4);
         this.cacheReport = new CacheReport();
     }
 

@@ -1,6 +1,7 @@
 package com.github.seregamorph.maven.test.storage;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
+import com.github.seregamorph.maven.test.common.ServerProtocolVersion;
 import com.github.seregamorph.maven.test.util.ResponseBodyUtils;
 import java.io.IOException;
 import java.net.URI;
@@ -26,11 +27,12 @@ public class HttpCacheStorage implements CacheStorage {
     private static final MediaType TYPE = MediaType.get("application/octet-stream");
 
     private final URI baseUrl;
-
+    private final boolean checkServerVersion;
     private final OkHttpClient client;
 
     public HttpCacheStorage(HttpCacheStorageConfig config) {
         this.baseUrl = config.baseUrl();
+        this.checkServerVersion = config.checkServerVersion();
         this.client = createHttpClient(config);
     }
 
@@ -53,6 +55,9 @@ public class HttpCacheStorage implements CacheStorage {
                 .build();
             LOGGER.info("Fetching from cache: {}", url);
             try (Response response = client.newCall(request).execute()) {
+                if (checkServerVersion) {
+                    checkServerVersion(response);
+                }
                 if (response.code() == 404) {
                     return null;
                 }
@@ -82,6 +87,9 @@ public class HttpCacheStorage implements CacheStorage {
                 .build();
             LOGGER.info("Pushing to cache: {}", url);
             try (Response response = client.newCall(request).execute()) {
+                if (checkServerVersion) {
+                    checkServerVersion(response);
+                }
                 ResponseBody responseBody = response.body();
                 if (responseBody == null) {
                     throw new IOException("No response body with response code: " + response.code());
@@ -100,5 +108,18 @@ public class HttpCacheStorage implements CacheStorage {
 
     private String getEntryUri(CacheEntryKey cacheEntryKey, String fileName) {
         return baseUrl + "/" + cacheEntryKey + "/" + fileName;
+    }
+
+    private void checkServerVersion(Response response) {
+        var serverVersionStr = response.header(ServerProtocolVersion.HEADER_SERVER_PROTOCOL_VERSION);
+        @Nullable var serverVersion = serverVersionStr == null || serverVersionStr.isEmpty() ?
+            null : Integer.parseInt(serverVersionStr);
+        if (serverVersion == null || serverVersion < ServerProtocolVersion.MIN_SERVER_PROTOCOL_VERSION) {
+            // this way we prevent failures caused by a breaking change with the new structure of TestTaskOutput
+            throw new MinServerProtocolVersionException("surefire-cached-extension is not compatible with server "
+                + "at " + baseUrl + ", "
+                + "please update test-cache-server first", serverVersion,
+                ServerProtocolVersion.MIN_SERVER_PROTOCOL_VERSION);
+        }
     }
 }
