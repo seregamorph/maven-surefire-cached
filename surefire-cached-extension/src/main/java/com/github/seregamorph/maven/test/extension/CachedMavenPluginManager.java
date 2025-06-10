@@ -27,7 +27,6 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.aether.RepositorySystemSession;
 import org.eclipse.aether.graph.DependencyFilter;
 import org.eclipse.aether.repository.RemoteRepository;
-import org.eclipse.sisu.Priority;
 
 /**
  * Custom {@link MavenPluginManager} that wraps surefire and failsafe plugin Mojos to support build cache.
@@ -36,7 +35,8 @@ import org.eclipse.sisu.Priority;
  */
 @Named
 @Singleton
-@Priority(10)
+@org.eclipse.sisu.Priority(10) // maven 3
+@org.apache.maven.api.di.Priority(10) // maven 4
 public class CachedMavenPluginManager implements MavenPluginManager {
 
     private final Provider<DefaultMavenPluginManager> defaultMavenPluginManagerProvider;
@@ -115,6 +115,12 @@ public class CachedMavenPluginManager implements MavenPluginManager {
     @Override
     public void releaseMojo(Object mojo, MojoExecution mojoExecution) {
         delegate().releaseMojo(mojo, mojoExecution);
+    }
+
+    // this method exists only in Maven 4
+    @Override
+    public void checkPrerequisites(PluginDescriptor pluginDescriptor) throws PluginIncompatibleException {
+        delegate().checkPrerequisites(pluginDescriptor);
     }
 
     private MavenPluginManager delegate() {

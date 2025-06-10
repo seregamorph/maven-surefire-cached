@@ -45,7 +45,7 @@
         -->
         <project.build.outputTimestamp>2025-01-01T01:00:00Z</project.build.outputTimestamp>
 
-        <maven.version>3.9.9</maven.version>
+        <maven.version>4.0.0-rc-3</maven.version>
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.3.0</maven-jar-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
@@ -203,6 +203,12 @@
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-core</artifactId>
                 <version>${maven.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.eclipse.sisu</groupId>
+                <artifactId>org.eclipse.sisu.inject</artifactId>
+                <version>0.9.0.M3</version>
             </dependency>
 
             <dependency>
