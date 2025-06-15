@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +54,7 @@ public class FileCacheStorage implements CacheStorage {
 
     @Override
     public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
-        var file = getEntryFile(cacheEntryKey, fileName);
+        File file = getEntryFile(cacheEntryKey, fileName);
         if (!file.exists()) {
             return null;
         }
@@ -65,8 +67,8 @@ public class FileCacheStorage implements CacheStorage {
 
     @Override
     public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
-        var file = getEntryFile(cacheEntryKey, fileName);
-        var deleted = createParentAndCleanupOld(file.getParentFile());
+        File file = getEntryFile(cacheEntryKey, fileName);
+        int deleted = createParentAndCleanupOld(file.getParentFile());
         try {
             Files.write(file.toPath(), value);
         } catch (IOException e) {
@@ -91,23 +93,23 @@ public class FileCacheStorage implements CacheStorage {
 
         int deleted = 0;
         // "$baseId/$groupId/$artifactId"
-        var layoutDirectory = directory.getParentFile();
+        File layoutDirectory = directory.getParentFile();
         if (layoutDirectory.exists()) {
             if (!layoutDirectory.getPath().startsWith(baseDir.getPath())) {
                 // sanity check before deleting directories
                 throw new IllegalStateException("Not a directory under baseDir " + layoutDirectory + " " + baseDir);
             }
-            var dirs = layoutDirectory.listFiles();
+            File[] dirs = layoutDirectory.listFiles();
             if (dirs == null) {
                 throw new IllegalStateException("Not a directory: " + layoutDirectory);
             }
-            var siblingDirs = Stream.of(dirs)
+            List<File> siblingDirs = Stream.of(dirs)
                 .sorted(Comparator.comparing(File::lastModified))
-                .toList();
+                .collect(Collectors.toList());
 
             // we delete all old entries, keep only last MAX_CACHE_ENTRIES-1
             for (int idx = 0; idx <= siblingDirs.size() - maxCacheEntries; idx++) {
-                var siblingDir = siblingDirs.get(idx);
+                File siblingDir = siblingDirs.get(idx);
                 LOGGER.debug("Deleting old cache entry {}", siblingDir);
                 MoreFileUtils.delete(siblingDir);
                 deleted++;

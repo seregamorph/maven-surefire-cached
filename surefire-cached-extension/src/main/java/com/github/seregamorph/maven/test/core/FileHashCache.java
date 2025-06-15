@@ -9,6 +9,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -41,21 +42,20 @@ public class FileHashCache {
      * <p>
      * Note: this method will calculate the same hash sum for class directory and jar archive of the same directory.
      *
-     * @param file                      class directory or JAR file
-     * @param excludePathPatterns ant expressions of classpath resources that should be skipped in hash
-     *                                  calculation
+     * @param file                class directory or JAR file
+     * @param excludePathPatterns ant expressions of classpath resources that should be skipped in hash calculation
      * @return aggregated hash sum
      */
     public String getClasspathElementHash(File file, List<String> excludePathPatterns) {
         try {
-            var cacheKey = new CacheKey(file.getCanonicalFile().getAbsolutePath(),
+            CacheKey cacheKey = new CacheKey(file.getCanonicalFile().getAbsolutePath(),
                 new ArrayList<>(excludePathPatterns));
             if (file.isDirectory()) {
-                Function<CacheKey, DirHashValue> loader =$ -> {
-                    var hash = plainHash(HashUtils.hashDirectory(file, excludePathPatterns));
+                Function<CacheKey, DirHashValue> loader = $ -> {
+                    String hash = plainHash(HashUtils.hashDirectory(file, excludePathPatterns));
                     return new DirHashValue(hash, file.lastModified());
                 };
-                var fileHashValue = cacheDirectories.get(cacheKey, loader);
+                DirHashValue fileHashValue = cacheDirectories.get(cacheKey, loader);
                 assert fileHashValue != null;
                 if (fileHashValue.fileLastModified() != file.lastModified()) {
                     log.warn("Invalidating cache of: {}", cacheKey);
@@ -66,10 +66,10 @@ public class FileHashCache {
             } else if (file.exists()) {
                 Function<CacheKey, FileHashValue> loader = $ -> {
                     // calculate has hums of zip entries ignoring timestamps
-                    var hash = plainHash(HashUtils.hashZipFile(file, excludePathPatterns));
+                    String hash = plainHash(HashUtils.hashZipFile(file, excludePathPatterns));
                     return new FileHashValue(hash, file.length(), file.lastModified());
                 };
-                var fileHashValue = cacheFiles.get(cacheKey, loader);
+                FileHashValue fileHashValue = cacheFiles.get(cacheKey, loader);
                 if (file.length() != fileHashValue.fileLength()
                     || fileHashValue.fileLastModified() != file.lastModified()) {
                     // this should not happen in a regular mvnw
@@ -92,17 +92,96 @@ public class FileHashCache {
             return HashUtils.HASH_EMPTY_FILE_COLLECTION;
         }
 
-        var sw = new StringBuilder();
+        StringBuilder sw = new StringBuilder();
         mapHash.forEach((key, value) -> sw.append(key).append(":").append(value).append("\n"));
         return HashUtils.hashArray(sw.toString().getBytes(StandardCharsets.UTF_8));
     }
 
-    private record CacheKey(String absoluteFileName, List<String> excludeClasspathResources) {
+    private static final class CacheKey {
+
+        private final String absoluteFileName;
+        private final List<String> excludeClasspathResources;
+
+        private CacheKey(String absoluteFileName, List<String> excludeClasspathResources) {
+            this.absoluteFileName = absoluteFileName;
+            this.excludeClasspathResources = excludeClasspathResources;
+        }
+
+        String absoluteFileName() {
+            return absoluteFileName;
+        }
+
+        List<String> excludeClasspathResources() {
+            return excludeClasspathResources;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (obj == null || obj.getClass() != this.getClass()) {
+                return false;
+            }
+            CacheKey that = (CacheKey) obj;
+            return Objects.equals(this.absoluteFileName, that.absoluteFileName)
+                && Objects.equals(this.excludeClasspathResources, that.excludeClasspathResources);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(absoluteFileName, excludeClasspathResources);
+        }
+
+        @Override
+        public String toString() {
+            return "CacheKey[" +
+                "absoluteFileName=" + absoluteFileName + ", " +
+                "excludeClasspathResources=" + excludeClasspathResources + ']';
+        }
     }
 
-    private record DirHashValue(String hash, long fileLastModified) {
+    private static final class DirHashValue {
+
+        private final String hash;
+        private final long fileLastModified;
+
+        private DirHashValue(String hash, long fileLastModified) {
+            this.hash = hash;
+            this.fileLastModified = fileLastModified;
+        }
+
+        String hash() {
+            return hash;
+        }
+
+        long fileLastModified() {
+            return fileLastModified;
+        }
     }
 
-    private record FileHashValue(String hash, long fileLength, long fileLastModified) {
+    private static final class FileHashValue {
+
+        private final String hash;
+        private final long fileLength;
+        private final long fileLastModified;
+
+        private FileHashValue(String hash, long fileLength, long fileLastModified) {
+            this.hash = hash;
+            this.fileLength = fileLength;
+            this.fileLastModified = fileLastModified;
+        }
+
+        String hash() {
+            return hash;
+        }
+
+        long fileLength() {
+            return fileLength;
+        }
+
+        long fileLastModified() {
+            return fileLastModified;
+        }
     }
 }

@@ -13,7 +13,7 @@ public final class TimeFormatUtils {
     }
 
     public static String formatTime(BigDecimal seconds) {
-        var secondsInt = seconds.intValue();
+        int secondsInt = seconds.intValue();
         if (secondsInt < 1) {
             return seconds + "s";
         }

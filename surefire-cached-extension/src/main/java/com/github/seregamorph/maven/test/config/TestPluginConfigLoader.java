@@ -5,9 +5,9 @@ import com.github.seregamorph.maven.test.util.JsonSerializers;
 import com.github.seregamorph.maven.test.util.MoreFileUtils;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.apache.maven.project.MavenProject;
@@ -25,7 +25,7 @@ public class TestPluginConfigLoader {
     private static final String CONFIG_FILE_NAME = "surefire-cached.json";
 
     private static final TestPluginConfig DEFAULT_COMMON_CONFIG = new TestPluginConfig()
-        .setInputIgnoredProperties(List.of(
+        .setInputIgnoredProperties(Arrays.asList(
             "java.version",
             "os.arch",
             "os.name",
@@ -36,11 +36,11 @@ public class TestPluginConfigLoader {
             "env.GITHUB_JOB",
             "env.GITHUB_SHA"
         ))
-        .setInputProperties(List.of("java.specification.version"))
-        .setExcludeModules(List.of())
+        .setInputProperties(Arrays.asList("java.specification.version"))
+        .setExcludeModules(Arrays.asList())
         // remove MANIFEST.MF and default maven descriptors with version
         // from the hash to unify hash calculation for jar files and classes directories
-        .setExcludeClasspathResources(List.of(
+        .setExcludeClasspathResources(Arrays.asList(
             "META-INF/MANIFEST.MF",
             "META-INF/maven/**/pom.properties",
             "META-INF/maven/**/pom.xml"
@@ -48,18 +48,18 @@ public class TestPluginConfigLoader {
 
     private static final TestPluginConfig DEFAULT_SUREFIRE_CONFIG = merge(
         new TestPluginConfig()
-            .setArtifacts(Map.of(
+            .setArtifacts(Collections.singletonMap(
                 "surefire-reports", new ArtifactsConfig()
-                    .setIncludes(List.of(
+                    .setIncludes(Arrays.asList(
                         "surefire-reports/TEST-*.xml"
                     )))),
         DEFAULT_COMMON_CONFIG);
 
     private static final TestPluginConfig DEFAULT_FAILSAFE_CONFIG = merge(
         new TestPluginConfig()
-            .setArtifacts(Map.of(
+            .setArtifacts(Collections.singletonMap(
                 "failsafe-reports", new ArtifactsConfig()
-                    .setIncludes(List.of(
+                    .setIncludes(Arrays.asList(
                         "failsafe-reports/TEST-*.xml",
                         "failsafe-reports/failsafe-summary.xml"
                     )))),
@@ -73,11 +73,11 @@ public class TestPluginConfigLoader {
      * @return
      */
     public static TestPluginConfig loadEffectiveTestPluginConfig(MavenProject project, PluginName pluginName) {
-        var configs = new ArrayList<SurefireCachedConfig>();
+        List<SurefireCachedConfig> configs = new ArrayList<>();
         MavenProject currentProject = project;
         do {
-            for (String fileName : List.of(CONFIG_FILE_NAME, ".mvn/" + CONFIG_FILE_NAME)) {
-                var surefireCachedConfigFile = new File(currentProject.getBasedir(), fileName);
+            for (String fileName : Arrays.asList(CONFIG_FILE_NAME, ".mvn/" + CONFIG_FILE_NAME)) {
+                File surefireCachedConfigFile = new File(currentProject.getBasedir(), fileName);
                 if (surefireCachedConfigFile.exists()) {
                     configs.add(JsonSerializers.deserialize(
                         MoreFileUtils.read(surefireCachedConfigFile), SurefireCachedConfig.class,
@@ -89,7 +89,7 @@ public class TestPluginConfigLoader {
 
         Collections.reverse(configs);
         TestPluginConfig mergedConfig = null;
-        for (var config : configs) {
+        for (SurefireCachedConfig config : configs) {
             if (mergedConfig == null) {
                 mergedConfig = mergeCommon(config, pluginName);
             } else {
@@ -97,7 +97,7 @@ public class TestPluginConfigLoader {
             }
         }
 
-        var defaultConfig = pluginName == PluginName.SUREFIRE_CACHED ?
+        TestPluginConfig defaultConfig = pluginName == PluginName.SUREFIRE_CACHED ?
             DEFAULT_SUREFIRE_CONFIG : DEFAULT_FAILSAFE_CONFIG;
         if (mergedConfig == null) {
             return defaultConfig;
@@ -106,9 +106,9 @@ public class TestPluginConfigLoader {
     }
 
     private static TestPluginConfig mergeCommon(SurefireCachedConfig surefireCachedConfig, PluginName pluginName) {
-        var pluginConfig = pluginName == PluginName.SUREFIRE_CACHED ?
+        TestPluginConfig pluginConfig = pluginName == PluginName.SUREFIRE_CACHED ?
             surefireCachedConfig.getSurefire() : surefireCachedConfig.getFailsafe();
-        var common = surefireCachedConfig.getCommon();
+        TestPluginConfig common = surefireCachedConfig.getCommon();
 
         return merge(pluginConfig, common);
     }

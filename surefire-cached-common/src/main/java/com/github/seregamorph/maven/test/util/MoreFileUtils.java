@@ -21,7 +21,7 @@ public final class MoreFileUtils {
     }
 
     public static void write(File file, byte[] bytes) {
-        try (var out = new FileOutputStream(file)) {
+        try (FileOutputStream out = new FileOutputStream(file)) {
             out.write(bytes);
         } catch (IOException e) {
             throw new UncheckedIOException(e);

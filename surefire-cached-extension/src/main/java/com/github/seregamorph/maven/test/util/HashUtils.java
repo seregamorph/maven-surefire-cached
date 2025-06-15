@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.math.BigInteger;
+import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.MessageDigest;
@@ -41,12 +42,12 @@ public final class HashUtils {
      */
     @Contract(pure = true)
     public static SortedMap<String, String> hashZipFile(File file, List<String> excludePathPatterns) {
-        var map = new TreeMap<String, String>();
-        try (var zipStream = new ZipInputStream(new FileInputStream(file))) {
+        SortedMap<String, String> map = new TreeMap<>();
+        try (ZipInputStream zipStream = new ZipInputStream(new FileInputStream(file))) {
             ZipEntry zipEntry;
             while ((zipEntry = zipStream.getNextEntry()) != null) {
                 if (!zipEntry.isDirectory()) {
-                    var entryName = zipEntry.getName();
+                    String entryName = zipEntry.getName();
                     if (include(excludePathPatterns, entryName)) {
                         map.put(entryName, hashStream(zipStream));
                     }
@@ -59,7 +60,7 @@ public final class HashUtils {
     }
 
     private static String hashStream(InputStream in) throws IOException {
-        var digest = getMessageDigest();
+        MessageDigest digest = getMessageDigest();
         int len;
         byte[] buffer = new byte[8192];
         while ((len = in.read(buffer)) != -1) {
@@ -69,7 +70,7 @@ public final class HashUtils {
     }
 
     private static String formatDigest(byte[] digest) {
-        var fullHash = String.format("%032X", new BigInteger(1, digest)).toLowerCase();
+        String fullHash = String.format("%032X", new BigInteger(1, digest)).toLowerCase();
         return fullHash.substring(0, 32);
     }
 
@@ -90,7 +91,7 @@ public final class HashUtils {
      */
     @Contract(pure = true)
     public static SortedMap<String, String> hashDirectory(File dir, List<String> excludePathPatterns) {
-        var map = new TreeMap<String, String>();
+        SortedMap<String, String> map = new TreeMap<String, String>();
         hashDirectory(map, dir.toPath(), dir.toPath(), excludePathPatterns);
         return map;
     }
@@ -101,12 +102,12 @@ public final class HashUtils {
         Path dir,
         List<String> excludePathPatterns
     ) {
-        try (var directoryStream = Files.newDirectoryStream(dir)) {
+        try (DirectoryStream<Path> directoryStream = Files.newDirectoryStream(dir)) {
             for (Path path : directoryStream) {
                 if (Files.isDirectory(path)) {
                     hashDirectory(map, baseDir, path, excludePathPatterns);
                 } else {
-                    var relativePath = baseDir.relativize(path).toString();
+                    String relativePath = baseDir.relativize(path).toString();
                     if (include(excludePathPatterns, relativePath)) {
                         map.put(relativePath, hashFile(path.toFile()));
                     }
@@ -121,8 +122,8 @@ public final class HashUtils {
         if (excludePathPatterns.isEmpty()) {
             return true;
         }
-        var antPathMatcher = new AntPathMatcher();
-        for (var excludePathPattern : excludePathPatterns) {
+        AntPathMatcher antPathMatcher = new AntPathMatcher();
+        for (String excludePathPattern : excludePathPatterns) {
             if (antPathMatcher.match(excludePathPattern, relativePath)) {
                 return false;
             }
@@ -132,7 +133,7 @@ public final class HashUtils {
 
     @Contract(pure = true)
     private static String hashFile(File file) {
-        try (var in = new FileInputStream(file)) {
+        try (FileInputStream in = new FileInputStream(file)) {
             return hashStream(in);
         } catch (IOException e) {
             throw new UncheckedIOException(e);

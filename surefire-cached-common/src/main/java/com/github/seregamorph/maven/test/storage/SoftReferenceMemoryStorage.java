@@ -2,6 +2,7 @@ package com.github.seregamorph.maven.test.storage;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
 import java.lang.ref.SoftReference;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -32,11 +33,11 @@ public class SoftReferenceMemoryStorage implements CacheStorage {
     @Nullable
     public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
         synchronized (cache) {
-            var softReferenceCacheEntry = cache.remove(cacheEntryKey);
+            SoftReference<Map<String, byte[]>> softReferenceCacheEntry = cache.remove(cacheEntryKey);
             if (softReferenceCacheEntry == null) {
                 return null;
             }
-            var cacheEntry = softReferenceCacheEntry.get();
+            Map<String, byte[]> cacheEntry = softReferenceCacheEntry.get();
             if (cacheEntry == null) {
                 logger.info("Null reference for cache key {}, current size {}", cacheEntryKey, cache.size());
                 return null;
@@ -51,16 +52,17 @@ public class SoftReferenceMemoryStorage implements CacheStorage {
     public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
         int deleted = 0;
         synchronized (cache) {
-            var softReferenceCacheEntry = cache.remove(cacheEntryKey);
-            var cacheEntry = softReferenceCacheEntry == null ? null : softReferenceCacheEntry.get();
+            SoftReference<Map<String, byte[]>> softReferenceCacheEntry = cache.remove(cacheEntryKey);
+            Map<String, byte[]> cacheEntry = softReferenceCacheEntry == null ? null : softReferenceCacheEntry.get();
             if (cacheEntry == null) {
                 if (cache.size() >= size) {
                     // LRU
-                    var iterator = cache.entrySet().iterator();
-                    var deletedEntry = iterator.next();
+                    Iterator<Map.Entry<CacheEntryKey, SoftReference<Map<String, byte[]>>>> iterator =
+                        cache.entrySet().iterator();
+                    Map.Entry<CacheEntryKey, SoftReference<Map<String, byte[]>>> deletedEntry = iterator.next();
                     logger.info("Removing eldest cache entry {} from cache.", deletedEntry.getKey());
-                    var deletedReference = deletedEntry.getValue();
-                    var deletedValue = deletedReference.get();
+                    SoftReference<Map<String, byte[]>> deletedReference = deletedEntry.getValue();
+                    Map<String, byte[]> deletedValue = deletedReference.get();
                     deleted = deletedValue == null ? 0 : deletedValue.size();
                     iterator.remove();
                 }

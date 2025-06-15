@@ -13,6 +13,7 @@ import com.github.seregamorph.maven.test.util.JsonSerializers;
 import com.github.seregamorph.maven.test.util.MoreFileUtils;
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -33,11 +34,28 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
 
     private static final Logger logger = LoggerFactory.getLogger(CachedTestLifecycleParticipant.class);
 
-    private record AggResult(int totalModules, BigDecimal totalTimeSec) {
+    private static final class AggResult {
+
         private static final AggResult EMPTY = new AggResult(0, BigDecimal.ZERO);
+
+        private final int totalModules;
+        private final BigDecimal totalTimeSec;
+
+        private AggResult(int totalModules, BigDecimal totalTimeSec) {
+            this.totalModules = totalModules;
+            this.totalTimeSec = totalTimeSec;
+        }
 
         AggResult add(BigDecimal time) {
             return new AggResult(totalModules + 1, totalTimeSec.add(time));
+        }
+
+        public int getTotalModules() {
+            return totalModules;
+        }
+
+        public BigDecimal getTotalTimeSec() {
+            return totalTimeSec;
         }
     }
 
@@ -55,22 +73,22 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
 
     @Override
     public void afterSessionEnd(MavenSession session) {
-        var cacheReport = testTaskCacheHelper.getCacheReport();
-        var pluginResults = new TreeMap<String, Map<TaskOutcome, AggResult>>();
-        for (var pluginName : List.of(PluginName.SUREFIRE_CACHED, PluginName.FAILSAFE_CACHED)) {
-            var pluginResult = new TreeMap<TaskOutcome, AggResult>();
+        CacheReport cacheReport = testTaskCacheHelper.getCacheReport();
+        Map<String, Map<TaskOutcome, AggResult>> pluginResults = new TreeMap<>();
+        for (PluginName pluginName : Arrays.asList(PluginName.SUREFIRE_CACHED, PluginName.FAILSAFE_CACHED)) {
+            Map<TaskOutcome, AggResult> pluginResult = new TreeMap<>();
             int deleted = 0;
-            var executionResults = cacheReport.getExecutionResults(pluginName);
-            for (var executionResult : executionResults) {
-                pluginResult.compute(executionResult.result(),
-                    (k, v) -> (v == null ? AggResult.EMPTY : v).add(executionResult.totalTimeSeconds()));
-                deleted += executionResult.deletedCacheEntries();
+            List<CacheReport.ModuleTestResult> executionResults = cacheReport.getExecutionResults(pluginName);
+            for (CacheReport.ModuleTestResult executionResult : executionResults) {
+                pluginResult.compute(executionResult.getResult(),
+                    (k, v) -> (v == null ? AggResult.EMPTY : v).add(executionResult.getTotalTimeSeconds()));
+                deleted += executionResult.getDeletedCacheEntries();
             }
             if (!pluginResult.isEmpty()) {
                 logger.info("Total test cached results ({}):", pluginName);
                 pluginResult.forEach((k, v) -> {
                     if (k.isPrint()) {
-                        var suffix = k.suffix();
+                        String suffix = k.suffix();
                         logger.info("{} ({} modules): {}{}", k, v.totalModules,
                             formatTime(v.totalTimeSec), suffix == null ? "" : " " + suffix);
                     }
@@ -92,16 +110,39 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
         return cacheStorage instanceof HttpCacheStorage;
     }
 
-    private void saveJsonReport(MavenSession session, TreeMap<String, Map<TaskOutcome, AggResult>> pluginResults) {
-        var jsonCacheReport = new JsonCacheReport(pluginResults, testTaskCacheHelper.getMetrics());
-        var dir = new File(session.getExecutionRootDirectory(), "target");
+    private void saveJsonReport(MavenSession session, Map<String, Map<TaskOutcome, AggResult>> pluginResults) {
+        JsonCacheReport jsonCacheReport = new JsonCacheReport(pluginResults, testTaskCacheHelper.getMetrics());
+        File dir = new File(session.getExecutionRootDirectory(), "target");
         dir.mkdir();
         MoreFileUtils.write(new File(dir, "surefire-cache-report.json"), JsonSerializers.serialize(jsonCacheReport));
     }
 
-    private record JsonCacheReport(
-        Map<String, Map<TaskOutcome, AggResult>> pluginResults,
-        CacheServiceMetrics cacheServiceMetrics) {
+    private static final class JsonCacheReport {
+
+        private final Map<String, Map<TaskOutcome, AggResult>> pluginResults;
+        private final CacheServiceMetrics cacheServiceMetrics;
+
+        private JsonCacheReport(
+            Map<String, Map<TaskOutcome, AggResult>> pluginResults,
+            CacheServiceMetrics cacheServiceMetrics) {
+            this.pluginResults = pluginResults;
+            this.cacheServiceMetrics = cacheServiceMetrics;
+        }
+
+        public Map<String, Map<TaskOutcome, AggResult>> getPluginResults() {
+            return pluginResults;
+        }
+
+        public CacheServiceMetrics getCacheServiceMetrics() {
+            return cacheServiceMetrics;
+        }
+
+        @Override
+        public String toString() {
+            return "JsonCacheReport[" +
+                "pluginResults=" + pluginResults + ", " +
+                "cacheServiceMetrics=" + cacheServiceMetrics + ']';
+        }
     }
 
     private static void logStorageMetrics(CacheServiceMetrics metrics) {

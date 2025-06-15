@@ -13,6 +13,7 @@ import java.io.StringWriter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -93,8 +94,8 @@ public final class TestTaskInput {
 
     @JsonIgnore
     public String hash() {
-        var sw = new StringWriter();
-        var pw = new PrintWriter(sw, true);
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw, true);
         pw.println("# Version");
         pw.println(getVersion());
         pw.println("# Properties");
@@ -102,7 +103,7 @@ public final class TestTaskInput {
         pw.println("# Plugins");
         pluginArtifactHashes.forEach((key, value) -> pw.println(key + " -> " + value));
         pw.println("# Dependencies");
-        var artifactHashes = new TreeSet<>();
+        Set<Object> artifactHashes = new TreeSet<>();
         artifactHashes.addAll(moduleArtifactHashes.values());
         artifactHashes.addAll(libraryArtifactHashes.values());
         artifactHashes.forEach(hash -> {
@@ -141,7 +142,7 @@ public final class TestTaskInput {
         String version,
         @Nullable String hash
     ) {
-        var key = groupArtifactId.toString();
+        String key = groupArtifactId.toString();
         if (classifier != null && !classifier.isEmpty()) {
             key += ":" + classifier;
         }
@@ -168,7 +169,7 @@ public final class TestTaskInput {
         String version,
         String hash
     ) {
-        var key = groupArtifactId.toString();
+        String key = groupArtifactId.toString();
         if (classifier != null && !classifier.isEmpty()) {
             key += ":" + classifier;
         }

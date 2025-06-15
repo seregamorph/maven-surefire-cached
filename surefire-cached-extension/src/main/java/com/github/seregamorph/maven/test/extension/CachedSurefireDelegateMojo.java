@@ -26,6 +26,7 @@ import java.io.File;
 import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.TreeMap;
@@ -84,9 +85,9 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
 
     private void reportCachedExecution(TaskOutcome result, TestTaskOutput testTaskOutput, int deletedCacheEntries) {
         cacheReport.addExecutionResult(getGroupArtifactId(project), pluginName,
-            result, testTaskOutput.totalTimeSeconds(), deletedCacheEntries);
+            result, testTaskOutput.getTotalTimeSeconds(), deletedCacheEntries);
 
-        var message = result.message(testTaskOutput);
+        String message = result.message(testTaskOutput);
         log.info("Cached execution "
             + project.getGroupId() + ":" + project.getArtifactId()
             + " " + result + (message == null ? "" : " " + message));
@@ -101,43 +102,43 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
             return;
         }
 
-        var startTime = Instant.now();
+        Instant startTime = Instant.now();
 
         MoreFileUtils.delete(reportsDirectory);
 
-        var skipCache = isTrue(getProperty(session, project, "skipCache"));
+        boolean skipCache = isTrue(getProperty(session, project, "skipCache"));
         if (skipCache) {
             log.info("Skipping cache for " + project.getGroupId() + ":" + project.getArtifactId());
             delegate.execute();
-            var testTaskOutput = getTaskOutput(startTime, Instant.now());
+            TestTaskOutput testTaskOutput = getTaskOutput(startTime, Instant.now());
             reportCachedExecution(TaskOutcome.SKIPPED_CACHE, testTaskOutput);
             return;
         }
 
-        var testPluginConfig = loadEffectiveTestPluginConfig(pluginName);
+        TestPluginConfig testPluginConfig = loadEffectiveTestPluginConfig(pluginName);
         log.debug("Effective test plugin config " + testPluginConfig);
 
-        var taskInputFile = new File(projectBuildDirectory, getTaskInputFileName());
-        var taskOutputFile = new File(projectBuildDirectory, getTaskOutputFileName());
+        File taskInputFile = new File(projectBuildDirectory, getTaskInputFileName());
+        File taskOutputFile = new File(projectBuildDirectory, getTaskOutputFileName());
         MoreFileUtils.delete(taskInputFile);
         MoreFileUtils.delete(taskOutputFile);
 
-        var testTaskInput = testTaskCacheHelper.getTestTaskInput(session, project, this.delegate, testPluginConfig);
-        var hash = testTaskInput.hash();
+        TestTaskInput testTaskInput = testTaskCacheHelper.getTestTaskInput(session, project, this.delegate, testPluginConfig);
+        String hash = testTaskInput.hash();
         testTaskInput.setHash(hash);
-        var testTaskInputBytes = JsonSerializers.serialize(testTaskInput);
+        byte[] testTaskInputBytes = JsonSerializers.serialize(testTaskInput);
         log.debug(new String(testTaskInputBytes, UTF_8));
         MoreFileUtils.write(taskInputFile, testTaskInputBytes);
-        var cacheEntryKey = new CacheEntryKey(pluginName, getGroupArtifactId(project), hash);
+        CacheEntryKey cacheEntryKey = new CacheEntryKey(pluginName, getGroupArtifactId(project), hash);
 
         // TODO calculate cache operation time (hash, load, store, etc.)
-        var entryCalculatedTime = Instant.now();
+        Instant entryCalculatedTime = Instant.now();
         log.debug("Cache entry calculated in " + Duration.between(startTime, entryCalculatedTime));
 
         boolean testClassesEmpty = Optional.ofNullable(testTaskInput.getTestClassesHashes())
             .map(Map::isEmpty).orElse(true);
         // try to restore from cache only if there are test classes
-        var restoredFromCache = !testClassesEmpty && restoreFromCache(cacheEntryKey, taskOutputFile);
+        boolean restoredFromCache = !testClassesEmpty && restoreFromCache(cacheEntryKey, taskOutputFile);
         if (restoredFromCache) {
             return;
         }
@@ -156,19 +157,19 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
             log.error("Test execution failed", e);
             throw e;
         } finally {
-            var testTaskOutput = getTaskOutput(startTime, Instant.now());
+            TestTaskOutput testTaskOutput = getTaskOutput(startTime, Instant.now());
             MoreFileUtils.write(taskOutputFile, JsonSerializers.serialize(testTaskOutput));
             // note that failsafe plugin does not throw exceptions on test failures
-            if (testTaskOutput.totalErrors() > 0 || testTaskOutput.totalFailures() > 0) {
+            if (testTaskOutput.getTotalErrors() > 0 || testTaskOutput.getTotalFailures() > 0) {
                 log.warn("Tests failed, not storing to cache. See " + reportsDirectory);
                 reportCachedExecution(TaskOutcome.FAILED, testTaskOutput);
             } else if (success) {
-                if (testTaskOutput.totalTests() == 0) {
+                if (testTaskOutput.getTotalTests() == 0) {
                     log.info("No tests found, not storing to cache");
                     reportCachedExecution(TaskOutcome.EMPTY, testTaskOutput);
                 } else {
                     log.info("Storing artifacts to cache from " + projectBuildDirectory);
-                    var deleted = storeCache(testPluginConfig, cacheEntryKey, testTaskInput, testTaskOutput);
+                    int deleted = storeCache(testPluginConfig, cacheEntryKey, testTaskInput, testTaskOutput);
                     reportCachedExecution(TaskOutcome.SUCCESS, testTaskOutput, deleted);
                 }
             }
@@ -176,14 +177,14 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
     }
 
     private boolean restoreFromCache(CacheEntryKey cacheEntryKey, File taskOutputFile) {
-        var testTaskOutputBytes = cacheService.read(cacheEntryKey, getTaskOutputFileName());
+        byte[] testTaskOutputBytes = cacheService.read(cacheEntryKey, getTaskOutputFileName());
         if (testTaskOutputBytes == null) {
             return false;
         }
 
         MoreFileUtils.write(taskOutputFile, testTaskOutputBytes);
         log.info("Cache hit " + cacheEntryKey);
-        var testTaskOutput = JsonSerializers.deserialize(testTaskOutputBytes, TestTaskOutput.class,
+        TestTaskOutput testTaskOutput = JsonSerializers.deserialize(testTaskOutputBytes, TestTaskOutput.class,
             getTaskOutputFileName());
         log.info("Restoring artifacts from cache to " + projectBuildDirectory);
 
@@ -211,32 +212,32 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
         int deleted = cacheService.write(cacheEntryKey, getTaskInputFileName(),
             JsonSerializers.serialize(testTaskInput));
         for (Map.Entry<String, ArtifactsConfig> entry : testPluginConfig.getArtifacts().entrySet()) {
-            var alias = entry.getKey();
-            var artifactsConfig = entry.getValue();
-            var fileName = getArtifactPackName(alias);
-            var packFile = new File(projectBuildDirectory, fileName);
+            String alias = entry.getKey();
+            ArtifactsConfig artifactsConfig = entry.getValue();
+            String fileName = getArtifactPackName(alias);
+            File packFile = new File(projectBuildDirectory, fileName);
             MoreFileUtils.delete(packFile);
-            var packedFiles = ZipUtils.packDirectory(projectBuildDirectory, artifactsConfig.getIncludes(), packFile);
+            List<ZipUtils.PackedFile> packedFiles = ZipUtils.packDirectory(projectBuildDirectory, artifactsConfig.getIncludes(), packFile);
             deleted += cacheService.write(cacheEntryKey, fileName, MoreFileUtils.read(packFile));
             long unpackedSize = packedFiles.stream().mapToLong(ZipUtils.PackedFile::unpackedSize).sum();
             OutputArtifact outputArtifact = new OutputArtifact(fileName, packedFiles.size(),
                 unpackedSize, packFile.length());
-            testTaskOutput.artifacts().put(alias, outputArtifact);
+            testTaskOutput.getArtifacts().put(alias, outputArtifact);
         }
-        var testTaskOutputBytes = JsonSerializers.serialize(testTaskOutput);
+        byte[] testTaskOutputBytes = JsonSerializers.serialize(testTaskOutput);
         deleted += cacheService.write(cacheEntryKey, getTaskOutputFileName(), testTaskOutputBytes);
         return deleted;
     }
 
     private void restoreCache(CacheEntryKey cacheEntryKey, TestTaskOutput testTaskOutput) throws InconsistentCacheException {
-        for (Map.Entry<String, OutputArtifact> entry : testTaskOutput.artifacts().entrySet()) {
-            var fileName = entry.getValue().fileName();
-            var packedContent = cacheService.read(cacheEntryKey, fileName);
+        for (Map.Entry<String, OutputArtifact> entry : testTaskOutput.getArtifacts().entrySet()) {
+            String fileName = entry.getValue().getFileName();
+            byte[] packedContent = cacheService.read(cacheEntryKey, fileName);
             if (packedContent == null) {
                 throw new InconsistentCacheException("Cache file not found " + cacheEntryKey + " " + fileName);
             }
 
-            var packFile = new File(projectBuildDirectory, fileName);
+            File packFile = new File(projectBuildDirectory, fileName);
             MoreFileUtils.write(packFile, packedContent);
             ZipUtils.unpackDirectory(packFile, projectBuildDirectory);
             MoreFileUtils.delete(packFile);
@@ -247,7 +248,7 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
         Instant startTime,
         Instant endTime
     ) {
-        var testReports = reportsDirectory.listFiles((dir, name) ->
+        File[] testReports = reportsDirectory.listFiles((dir, name) ->
             name.startsWith("TEST-") && name.endsWith(".xml"));
 
         if (testReports == null) {
@@ -259,8 +260,8 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
         int totalTests = 0;
         int totalErrors = 0;
         int totalFailures = 0;
-        for (var testReport : testReports) {
-            var testSuiteSummary = TestSuiteReport.fromFile(testReport);
+        for (File testReport : testReports) {
+            TestSuiteReport testSuiteSummary = TestSuiteReport.fromFile(testReport);
             totalClasses++;
             totalTestTimeSeconds = totalTestTimeSeconds.add(testSuiteSummary.timeSeconds());
             totalTests += testSuiteSummary.tests();
@@ -272,7 +273,7 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
         }
 
         // artifacts are filled before saving
-        var artifacts = new TreeMap<String, OutputArtifact>();
+        Map<String, OutputArtifact> artifacts = new TreeMap<>();
         return new TestTaskOutput(startTime, endTime, getTotalTimeSeconds(startTime, endTime),
             totalClasses, totalTestTimeSeconds, totalTests, totalErrors, totalFailures, artifacts);
     }
@@ -282,7 +283,7 @@ public class CachedSurefireDelegateMojo extends AbstractMojo {
     }
 
     private static BigDecimal getTotalTimeSeconds(Instant startTime, Instant endTime) {
-        var duration = Duration.between(startTime, endTime);
+        Duration duration = Duration.between(startTime, endTime);
         long durationMillis = duration.toMillis();
         return TimeFormatUtils.toSeconds(durationMillis);
     }

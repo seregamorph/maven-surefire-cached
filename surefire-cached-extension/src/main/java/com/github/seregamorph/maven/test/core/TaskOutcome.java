@@ -12,22 +12,22 @@ public enum TaskOutcome {
     SUCCESS("serial time", true) {
         @Override
         public String message(TestTaskOutput testTaskOutput) {
-            return "(" + testTaskOutput.totalTests() + " tests"
-                + ", " + testTaskOutput.totalTestTimeSeconds() + "s)";
+            return "(" + testTaskOutput.getTotalTests() + " tests"
+                + ", " + testTaskOutput.getTotalTestTimeSeconds() + "s)";
         }
     },
     FAILED("serial time", true) {
         @Override
         public String message(TestTaskOutput testTaskOutput) {
-            return "(errors " + testTaskOutput.totalErrors()
-                + ", failures " + testTaskOutput.totalFailures() + ")";
+            return "(errors " + testTaskOutput.getTotalErrors()
+                + ", failures " + testTaskOutput.getTotalFailures() + ")";
         }
     },
     EMPTY("serial time", false),
     FROM_CACHE("serial time saved", true) {
         @Override
         public String message(TestTaskOutput testTaskOutput) {
-            return "(saved " + testTaskOutput.totalTimeSeconds() + "s)";
+            return "(saved " + testTaskOutput.getTotalTimeSeconds() + "s)";
         }
     };
 

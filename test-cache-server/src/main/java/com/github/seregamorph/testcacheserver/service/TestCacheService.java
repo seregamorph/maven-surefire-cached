@@ -52,7 +52,7 @@ public class TestCacheService {
                 .increment();
 
             var testTaskOutput = JsonSerializers.deserialize(body, TestTaskOutput.class, fileName);
-            var totalTimeSeconds = testTaskOutput.totalTimeSeconds();
+            var totalTimeSeconds = testTaskOutput.getTotalTimeSeconds();
             Counter.builder("cache_spent_time_seconds")
                 .tag("pluginName", pluginName)
                 .register(meterRegistry)
@@ -99,7 +99,7 @@ public class TestCacheService {
             Counter.builder("cache_saved_time_seconds")
                 .tag("pluginName", pluginName)
                 .register(meterRegistry)
-                .increment(testTaskOutput.totalTimeSeconds().doubleValue());
+                .increment(testTaskOutput.getTotalTimeSeconds().doubleValue());
         }
 
         return body;

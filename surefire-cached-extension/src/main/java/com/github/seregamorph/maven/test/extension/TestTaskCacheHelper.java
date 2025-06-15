@@ -15,6 +15,7 @@ import com.github.seregamorph.maven.test.util.MavenPropertyUtils;
 import java.io.File;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -96,52 +97,52 @@ public class TestTaskCacheHelper {
         Mojo delegate,
         TestPluginConfig testPluginConfig
     ) {
-        var activeProfiles = session.getRequest().getActiveProfiles();
+        List<String> activeProfiles = session.getRequest().getActiveProfiles();
 
-        var testTaskInput = new TestTaskInput();
+        TestTaskInput testTaskInput = new TestTaskInput();
 
         testTaskInput.addIgnoredProperty("timestamp", Instant.now().toString());
-        for (var ignoredProperty : testPluginConfig.getInputIgnoredProperties()) {
-            var value = MavenPropertyUtils.getProperty(session, project, ignoredProperty);
+        for (String ignoredProperty : testPluginConfig.getInputIgnoredProperties()) {
+            String value = MavenPropertyUtils.getProperty(session, project, ignoredProperty);
             if (value != null) {
                 testTaskInput.addIgnoredProperty(ignoredProperty, value);
             }
         }
 
-        for (var property : testPluginConfig.getInputProperties()) {
-            var value = MavenPropertyUtils.getProperty(session, project, property);
+        for (String property : testPluginConfig.getInputProperties()) {
+            String value = MavenPropertyUtils.getProperty(session, project, property);
             if (value != null) {
                 testTaskInput.addProperty(property, value);
             }
         }
 
-        var pluginContext = ((ContextEnabled) delegate).getPluginContext();
-        var pluginDescriptor = (PluginDescriptor) pluginContext.get("pluginDescriptor");
+        Map<?, ?> pluginContext = ((ContextEnabled) delegate).getPluginContext();
+        PluginDescriptor pluginDescriptor = (PluginDescriptor) pluginContext.get("pluginDescriptor");
         if (pluginDescriptor != null) {
-            var pluginArtifacts = pluginDescriptor.getArtifacts();
-            for (var pluginArtifact : pluginArtifacts) {
-                var file = pluginArtifact.getFile();
-                var hash = file == null ? null : fileHashCache.getClasspathElementHash(file,
+            List<Artifact> pluginArtifacts = pluginDescriptor.getArtifacts();
+            for (Artifact pluginArtifact : pluginArtifacts) {
+                File file = pluginArtifact.getFile();
+                String hash = file == null ? null : fileHashCache.getClasspathElementHash(file,
                     testPluginConfig.getExcludeClasspathResources());
-                var groupArtifactId = groupArtifactId(pluginArtifact);
+                GroupArtifactId groupArtifactId = groupArtifactId(pluginArtifact);
                 testTaskInput.addPluginArtifactHash(groupArtifactId, pluginArtifact.getClassifier(),
                     pluginArtifact.getVersion(), hash);
             }
         }
 
         testTaskInput.setModuleName(project.getGroupId() + ":" + project.getArtifactId());
-        var testClasspath = getTestClasspath(project);
-        for (var artifact : testClasspath.artifacts()) {
+        TestClasspath testClasspath = getTestClasspath(project);
+        for (Artifact artifact : testClasspath.artifacts()) {
             if (isIncludeToCacheEntry(testPluginConfig.getExcludeModules(), artifact)) {
                 // Can be a jar file (when "install" command is executed) or
                 // a classes directory (when "test" command is executed).
                 // The trick is we calculate hash of files which is the same in both cases (jar manifest is ignored)
-                var file = artifact.getFile();
-                var hash = fileHashCache.getClasspathElementHash(file, testPluginConfig.getExcludeClasspathResources());
-                var groupArtifactId = groupArtifactId(artifact);
-                var classifier = artifact.getClassifier();
-                var classifierSuffix = classifier == null || classifier.isEmpty() ? "" : ":" + classifier;
-                var fileTypeSuffix = file.isDirectory() ? "@dir" : "@" + artifact.getType();
+                File file = artifact.getFile();
+                String hash = fileHashCache.getClasspathElementHash(file, testPluginConfig.getExcludeClasspathResources());
+                GroupArtifactId groupArtifactId = groupArtifactId(artifact);
+                String classifier = artifact.getClassifier();
+                String classifierSuffix = classifier == null || classifier.isEmpty() ? "" : ":" + classifier;
+                String fileTypeSuffix = file.isDirectory() ? "@dir" : "@" + artifact.getType();
                 if (modules.contains(groupArtifactId)) {
                     testTaskInput.addModuleArtifactHash(groupArtifactId + classifierSuffix + fileTypeSuffix, hash);
                 } else {
@@ -172,9 +173,9 @@ public class TestTaskCacheHelper {
 
     static boolean isIncludeToCacheEntry(List<String> excludeModules, Artifact artifact) {
         if (artifact.getArtifactHandler().isAddedToClasspath()) {
-            var antPathMatcher = new AntPathMatcher(":");
-            for (var excludeModule : excludeModules) {
-                var gai = artifact.getGroupId() + ":" + artifact.getArtifactId();
+            AntPathMatcher antPathMatcher = new AntPathMatcher(":");
+            for (String excludeModule : excludeModules) {
+                String gai = artifact.getGroupId() + ":" + artifact.getArtifactId();
                 if (antPathMatcher.match(excludeModule, gai)) {
                     return false;
                 }
@@ -187,9 +188,9 @@ public class TestTaskCacheHelper {
     private static TestClasspath getTestClasspath(MavenProject project) {
         // todo respect getClasspathDependencyExcludes, getClasspathDependencyScopeExclude,
         // getAdditionalClasspathElements
-        var artifacts = project.getArtifacts();
-        var classesDir = new File(project.getBuild().getOutputDirectory());
-        var testClassesDir = new File(project.getBuild().getTestOutputDirectory());
+        Set<Artifact> artifacts = project.getArtifacts();
+        File classesDir = new File(project.getBuild().getOutputDirectory());
+        File testClassesDir = new File(project.getBuild().getTestOutputDirectory());
         return new TestClasspath(artifacts, classesDir, testClassesDir);
     }
 
@@ -197,6 +198,28 @@ public class TestTaskCacheHelper {
         return new GroupArtifactId(artifact.getGroupId(), artifact.getArtifactId());
     }
 
-    private record TestClasspath(Set<Artifact> artifacts, File classesDir, File testClassesDir) {
+    private static final class TestClasspath {
+
+        private final Set<Artifact> artifacts;
+        private final File classesDir;
+        private final File testClassesDir;
+
+        private TestClasspath(Set<Artifact> artifacts, File classesDir, File testClassesDir) {
+            this.artifacts = artifacts;
+            this.classesDir = classesDir;
+            this.testClassesDir = testClassesDir;
+        }
+
+        public Set<Artifact> artifacts() {
+            return artifacts;
+        }
+
+        public File classesDir() {
+            return classesDir;
+        }
+
+        public File testClassesDir() {
+            return testClassesDir;
+        }
     }
 }

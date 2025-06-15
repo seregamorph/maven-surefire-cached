@@ -25,7 +25,30 @@ import org.apache.commons.io.IOUtils;
  */
 public final class ZipUtils {
 
-    public record PackedFile(String fileName, long unpackedSize) {
+    public static final class PackedFile {
+
+        private final String fileName;
+        private final long unpackedSize;
+
+        public PackedFile(String fileName, long unpackedSize) {
+            this.fileName = fileName;
+            this.unpackedSize = unpackedSize;
+        }
+
+        public String fileName() {
+            return fileName;
+        }
+
+        public long unpackedSize() {
+            return unpackedSize;
+        }
+
+        @Override
+        public String toString() {
+            return "PackedFile[" +
+                "fileName=" + fileName + ", " +
+                "unpackedSize=" + unpackedSize + ']';
+        }
     }
 
     /**
@@ -37,7 +60,7 @@ public final class ZipUtils {
      * @return packed files info
      */
     public static List<PackedFile> packDirectory(File directory, List<String> includes, File packFile) {
-        var packedFiles = new ArrayList<PackedFile>();
+        List<PackedFile> packedFiles = new ArrayList<>();
         try (OutputStream fos = new FileOutputStream(packFile);
              BufferedOutputStream bos = new BufferedOutputStream(fos);
              GzipCompressorOutputStream gzos = new GzipCompressorOutputStream(bos);
@@ -45,10 +68,10 @@ public final class ZipUtils {
         ) {
             taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
 
-            var matchingFileNames = findMatchingFileNames(directory, includes);
+            List<String> matchingFileNames = findMatchingFileNames(directory, includes);
 
-            for (var fileName : matchingFileNames) {
-                var file = new File(directory, fileName);
+            for (String fileName : matchingFileNames) {
+                File file = new File(directory, fileName);
                 if (file.isFile()) {
                     TarArchiveEntry entry = new TarArchiveEntry(file, fileName);
                     taos.putArchiveEntry(entry);
@@ -75,7 +98,7 @@ public final class ZipUtils {
             TarArchiveEntry entry;
             while ((entry = tais.getNextEntry()) != null) {
                 // Prevent Zip Slip vulnerability
-                var outputDir = targetDirectory.toPath();
+                Path outputDir = targetDirectory.toPath();
                 Path outputPath = outputDir.resolve(entry.getName()).normalize();
                 if (!outputPath.startsWith(outputDir)) {
                     throw new IOException("Entry is outside of the target directory: " + entry.getName());

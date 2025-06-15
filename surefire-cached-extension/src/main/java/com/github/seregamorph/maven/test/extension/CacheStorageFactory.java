@@ -37,7 +37,7 @@ class CacheStorageFactory {
         //noinspection HttpUrlsUsage
         if (cacheStorageUrl.startsWith("http://") || cacheStorageUrl.startsWith("https://")) {
             // todo support custom configuration, auth, etc.
-            var httpCacheStorageConfig = new HttpCacheStorageConfig(URI.create(cacheStorageUrl),
+            HttpCacheStorageConfig httpCacheStorageConfig = new HttpCacheStorageConfig(URI.create(cacheStorageUrl),
                 true, Duration.ofSeconds(5L), Duration.ofSeconds(10L), Duration.ofSeconds(10L));
             return new HttpCacheStorage(httpCacheStorageConfig);
         }

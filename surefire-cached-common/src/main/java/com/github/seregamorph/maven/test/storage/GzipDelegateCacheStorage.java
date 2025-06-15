@@ -4,9 +4,11 @@ import com.github.seregamorph.maven.test.common.CacheEntryKey;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 import javax.annotation.Nullable;
+import org.apache.commons.io.IOUtils;
 
 /**
  * Wrapping cache storage that packs/unpacks entities to save storage space.
@@ -25,7 +27,7 @@ public class GzipDelegateCacheStorage implements CacheStorage {
     @Nullable
     @Override
     public byte[] read(CacheEntryKey cacheEntryKey, String fileName) throws CacheStorageException {
-        var bytes = delegate.read(cacheEntryKey, fileName);
+        byte[] bytes = delegate.read(cacheEntryKey, fileName);
         if (bytes == null) {
             return null;
         }
@@ -33,8 +35,8 @@ public class GzipDelegateCacheStorage implements CacheStorage {
             // .tar.gz files were already compressed, no need to unpack
             return bytes;
         } else {
-            try (var in = new GZIPInputStream(new ByteArrayInputStream(bytes))) {
-                return in.readAllBytes();
+            try (InputStream in = new GZIPInputStream(new ByteArrayInputStream(bytes))) {
+                return IOUtils.toByteArray(in);
             } catch (IOException e) {
                 throw new CacheStorageException("Error unpacking file " + fileName, e);
             }
@@ -47,7 +49,7 @@ public class GzipDelegateCacheStorage implements CacheStorage {
         if (isAlreadyCompressed(fileName)) {
             bytesToWrite = value;
         } else {
-            var baos = new ByteArrayOutputStream();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
             try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
                 gzip.write(value);
             } catch (IOException e) {

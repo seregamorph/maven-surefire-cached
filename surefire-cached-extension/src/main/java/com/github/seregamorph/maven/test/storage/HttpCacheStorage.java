@@ -47,7 +47,7 @@ public class HttpCacheStorage implements CacheStorage {
     @Nullable
     @Override
     public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
-        var url = getEntryUri(cacheEntryKey, fileName);
+        String url = getEntryUri(cacheEntryKey, fileName);
         try {
             Request request = new Request.Builder()
                 .get()
@@ -78,9 +78,9 @@ public class HttpCacheStorage implements CacheStorage {
 
     @Override
     public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
-        var url = getEntryUri(cacheEntryKey, fileName);
+        String url = getEntryUri(cacheEntryKey, fileName);
         try {
-            var requestBody = RequestBody.create(value, TYPE);
+            RequestBody requestBody = RequestBody.create(value, TYPE);
             Request request = new Request.Builder()
                 .put(requestBody)
                 .url(url)
@@ -111,7 +111,7 @@ public class HttpCacheStorage implements CacheStorage {
     }
 
     private void checkServerVersion(Response response) {
-        var serverProtocolVersionStr = response.header(ServerProtocolVersion.HEADER_SERVER_PROTOCOL_VERSION);
+        String serverProtocolVersionStr = response.header(ServerProtocolVersion.HEADER_SERVER_PROTOCOL_VERSION);
         @Nullable Integer serverProtocolVersion = null;
         if (serverProtocolVersionStr != null) {
             try {

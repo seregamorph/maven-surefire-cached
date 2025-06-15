@@ -1,12 +1,12 @@
 package com.github.seregamorph.maven.test.storage;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.annotation.Nullable;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * In-memory cache LRU storage.
@@ -32,7 +32,7 @@ public class MemoryStorage implements CacheStorage {
     @Nullable
     public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
         synchronized (cache) {
-            var cacheEntry = cache.remove(cacheEntryKey);
+            Map<String, byte[]> cacheEntry = cache.remove(cacheEntryKey);
             if (cacheEntry == null) {
                 return null;
             }
@@ -46,14 +46,14 @@ public class MemoryStorage implements CacheStorage {
     public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
         int deleted = 0;
         synchronized (cache) {
-            var cacheEntry = cache.remove(cacheEntryKey);
+            Map<String, byte[]> cacheEntry = cache.remove(cacheEntryKey);
             if (cacheEntry == null) {
                 if (cache.size() >= size) {
                     // LRU
-                    var iterator = cache.entrySet().iterator();
-                    var deletedEntry = iterator.next();
+                    Iterator<Map.Entry<CacheEntryKey, Map<String, byte[]>>> iterator = cache.entrySet().iterator();
+                    Map.Entry<CacheEntryKey, Map<String, byte[]>> deletedEntry = iterator.next();
                     logger.info("Removing eldest cache entry {} from cache.", deletedEntry.getKey());
-                    var deletedValue = deletedEntry.getValue();
+                    Map<String, byte[]> deletedValue = deletedEntry.getValue();
                     synchronized (deletedValue) {
                         deleted = deletedValue.size();
                     }
