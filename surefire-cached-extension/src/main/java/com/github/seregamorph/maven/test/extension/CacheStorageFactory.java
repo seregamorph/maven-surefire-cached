@@ -2,6 +2,7 @@ package com.github.seregamorph.maven.test.extension;
 
 import static com.github.seregamorph.maven.test.util.MavenPropertyUtils.isTrue;
 
+import com.github.seregamorph.maven.test.extension.spi.CacheStorageProvider;
 import com.github.seregamorph.maven.test.storage.CacheStorage;
 import com.github.seregamorph.maven.test.storage.FileCacheStorage;
 import com.github.seregamorph.maven.test.storage.HttpCacheStorage;
@@ -10,6 +11,7 @@ import com.github.seregamorph.maven.test.util.PropertySource;
 import java.io.File;
 import java.net.URI;
 import java.time.Duration;
+import java.util.ServiceLoader;
 import javax.annotation.Nullable;
 
 /**
@@ -38,6 +40,28 @@ class CacheStorageFactory {
         //noinspection HttpUrlsUsage
         if (cacheStorageUrl.startsWith("http://") || cacheStorageUrl.startsWith("https://")) {
             return createHttpCacheStorage(cacheStorageUrl);
+        }
+
+        // SPI support optional S3CacheStorage from another module
+        ServiceLoader<CacheStorageProvider> loader =
+            ServiceLoader.load(CacheStorageProvider.class, CacheStorageProvider.class.getClassLoader());
+        for (CacheStorageProvider storageProvider : loader) {
+            if (storageProvider.supportsCacheStorageUrl(cacheStorageUrl)) {
+                return storageProvider.createCacheStorage(cacheStorageUrl, propertySource);
+            }
+        }
+
+        if (cacheStorageUrl.startsWith("s3:")) {
+            String version = getClass().getPackage().getImplementationVersion();
+            throw new IllegalArgumentException("The " + PROP_CACHE_STORAGE_URL + " is defined as "
+                + cacheStorageUrl + "\n"
+                + "Please use\n"
+                + "    <extension>\n"
+                + "        <groupId>com.github.seregamorph</groupId>\n"
+                + "        <artifactId>surefire-cached-extension-s3</artifactId>\n"
+                + "        <version>" + version + "</version>\n"
+                + "    </extension>\n"
+                + "instead of surefire-cached-extension in .mvn/extensions.xml");
         }
 
         return new FileCacheStorage(new File(cacheStorageUrl));

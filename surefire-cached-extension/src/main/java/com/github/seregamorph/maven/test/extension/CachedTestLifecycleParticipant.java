@@ -10,6 +10,7 @@ import com.github.seregamorph.maven.test.core.TaskOutcome;
 import com.github.seregamorph.maven.test.storage.CacheServiceMetrics;
 import com.github.seregamorph.maven.test.storage.CacheStorage;
 import com.github.seregamorph.maven.test.storage.HttpCacheStorage;
+import com.github.seregamorph.maven.test.storage.S3CacheStorage;
 import com.github.seregamorph.maven.test.util.JsonSerializers;
 import com.github.seregamorph.maven.test.util.MoreFileUtils;
 import java.io.File;
@@ -114,7 +115,8 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
     }
 
     private boolean isLogStorageMetrics(CacheStorage cacheStorage) {
-        return cacheStorage instanceof HttpCacheStorage;
+        return cacheStorage instanceof HttpCacheStorage
+            || cacheStorage instanceof S3CacheStorage;
     }
 
     private void saveJsonReport(MavenSession session, Map<PluginName, Map<TaskOutcome, AggResult>> pluginResults) {

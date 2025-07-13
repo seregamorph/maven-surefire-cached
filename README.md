@@ -27,7 +27,7 @@ Add to the `.mvn/extensions.xml` of your project:
 ```
 This extension will print the cache statistics after the build.
 
-## Configuration
+## Module configuration
 It's possible to define `surefire-cached.json` file for the module. If the file is not found,
 the extension will go thru the parent modules (till root) and try to find it there.
 
@@ -126,7 +126,18 @@ custom artifacts to be cached (separate for surefire and failsafe):
 }
 ```
 
-Sample adoption:
+## Global configuration
+It's possible to define global configuration options. These parameters can be specified in `.mvn/maven.config` as
+default, or in the maven command line. Configuration parameters should be prefixed 
+with `-D` (e.g. `-DcacheExpirationHours=4`). All these parameters are optional and have default value.
+
+Parameters:
+
+| Parameter              | Comment                                                                                      | Default value |
+|------------------------|----------------------------------------------------------------------------------------------|---------------|
+| `cacheExpirationHours` | Time interval in hours for how long the cache entity is valid. Now used only for s3 storage. | 6             |
+
+## Sample adoption:
 * https://github.com/seregamorph/spring-test-smart-context/pull/23
 * https://github.com/seregamorph/rest-api-framework/pull/2
 
@@ -173,6 +184,36 @@ Actuator endpoints are available at http://localhost:8080/actuator, see http://l
 for metrics.
 
 TODO grafana dashboard WiP
+
+## Using S3 from Maven
+It's possible to access S3 directly from Maven build (no HTTP service required).
+
+First you need to use this extension in `.mvn/extensions.xml` (instead of the regular `surefire-cached-extension`):
+```xml
+<extensions>
+    <extension>
+        <groupId>com.github.seregamorph</groupId>
+        <artifactId>surefire-cached-extension-s3</artifactId>
+        <version>0.22-SNAPSHOT</version>
+    </extension>
+</extensions>
+```
+
+Declare `cacheStorageUrl` property as s3 URI to the bucket:
+```shell
+mvn clean verify -DcacheStorageUrl=s3://bucketname
+```
+Other parameters will be obtained from the environment variables (like `AWS_REGION`), system property
+(like `aws.region`) or default local AWS profile.
+
+Depending on the authorization provider these environment variables may be used
+* `AWS_ACCESS_KEY_ID`
+* `AWS_SECRET_KEY_ID`
+
+For the other options (including loading from `~/.aws/credentials`) see
+[AWS documentation](https://docs.aws.amazon.com/sdk-for-java/latest/developer-guide/credentials-chain.html)
+
+The entities will be saved in S3 with [cacheExpirationHours](README.md#global-configuration) expiration timeout.
 
 ## Reporting
 The extension generates text and json reports at the end of the build.
