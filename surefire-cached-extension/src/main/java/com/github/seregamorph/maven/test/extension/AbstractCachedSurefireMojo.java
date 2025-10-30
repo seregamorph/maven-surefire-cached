@@ -15,7 +15,6 @@ import com.github.seregamorph.maven.test.config.ArtifactsConfig;
 import com.github.seregamorph.maven.test.config.TestPluginConfig;
 import com.github.seregamorph.maven.test.config.TestPluginConfigLoader;
 import com.github.seregamorph.maven.test.core.TaskOutcome;
-import com.github.seregamorph.maven.test.core.TestSuiteReport;
 import com.github.seregamorph.maven.test.core.TestTaskInput;
 import com.github.seregamorph.maven.test.storage.CacheService;
 import com.github.seregamorph.maven.test.util.JsonSerializers;
@@ -29,7 +28,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.TreeMap;
 import org.apache.maven.execution.MavenSession;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.Mojo;
@@ -44,7 +42,7 @@ import org.slf4j.LoggerFactory;
  */
 abstract class AbstractCachedSurefireMojo extends AbstractMojo {
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
+    final Logger log = LoggerFactory.getLogger(getClass());
 
     private final TestTaskCacheHelper testTaskCacheHelper;
     private final CacheService cacheService;
@@ -55,7 +53,7 @@ abstract class AbstractCachedSurefireMojo extends AbstractMojo {
     private final PluginName pluginName;
 
     private final File projectBuildDirectory;
-    private final File reportsDirectory;
+    final File reportsDirectory;
 
     AbstractCachedSurefireMojo(
         TestTaskCacheHelper testTaskCacheHelper,
@@ -256,55 +254,13 @@ abstract class AbstractCachedSurefireMojo extends AbstractMojo {
         }
     }
 
-    private TestTaskOutput getTaskOutput(
-        Instant startTime,
-        Instant endTime
-    ) {
-        File[] testReports = reportsDirectory.listFiles((dir, name) ->
-            name.startsWith("TEST-") && name.endsWith(".xml"));
-
-        if (testReports == null) {
-            testReports = new File[0];
-        }
-
-        BigDecimal totalTestTimeSeconds = BigDecimal.ZERO;
-        int totalTests = 0;
-        int totalErrors = 0;
-        int totalFailures = 0;
-        int totalTestcaseFlakyErrors = 0;
-        int totalTestcaseFlakyFailures = 0;
-        int totalTestcaseErrors = 0;
-        for (File testReport : testReports) {
-            TestSuiteReport testSuiteSummary = TestSuiteReport.fromFile(testReport);
-            totalTestTimeSeconds = totalTestTimeSeconds.add(testSuiteSummary.timeSeconds());
-            totalTests += testSuiteSummary.tests();
-            totalErrors += testSuiteSummary.errors();
-            totalFailures += testSuiteSummary.failures();
-            totalTestcaseFlakyErrors += testSuiteSummary.testcaseFlakyErrors();
-            totalTestcaseFlakyFailures += testSuiteSummary.testcaseFlakyFailures();
-            totalTestcaseErrors += testSuiteSummary.testcaseErrors();
-            if (testSuiteSummary.errors() > 0 || testSuiteSummary.failures() > 0
-                || testSuiteSummary.testcaseErrors() > 0) {
-                log.warn("{} has errors or failures, skipping cache", testReport);
-            } else if (testSuiteSummary.testcaseFlakyErrors() > 0
-                || testSuiteSummary.testcaseFlakyFailures() > 0) {
-                log.warn("{} has flaky errors", testReport);
-            }
-        }
-
-        // artifacts are filled before saving
-        Map<String, OutputArtifact> artifacts = new TreeMap<>();
-        return new TestTaskOutput(startTime, endTime, getTotalTimeSeconds(startTime, endTime),
-            totalTestTimeSeconds, totalTests, totalErrors, totalFailures,
-            totalTestcaseFlakyErrors, totalTestcaseFlakyFailures, totalTestcaseErrors,
-            artifacts);
-    }
+    abstract TestTaskOutput getTaskOutput(Instant startTime, Instant endTime);
 
     private static String getArtifactPackName(String alias) {
         return alias + ".tar.gz";
     }
 
-    private static BigDecimal getTotalTimeSeconds(Instant startTime, Instant endTime) {
+    static BigDecimal getTotalTimeSeconds(Instant startTime, Instant endTime) {
         Duration duration = Duration.between(startTime, endTime);
         long durationMillis = duration.toMillis();
         return TimeFormatUtils.toSeconds(durationMillis);

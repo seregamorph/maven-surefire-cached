@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * @author Sergey Chernov
@@ -27,6 +28,8 @@ public final class TestTaskOutput {
     private final int totalTests;
     private final int totalErrors;
     private final int totalFailures;
+    @Nullable
+    private final String failureMessage;
     private final int totalTestcaseFlakyErrors;
     private final int totalTestcaseFlakyFailures;
     private final int totalTestcaseErrors;
@@ -42,6 +45,8 @@ public final class TestTaskOutput {
         int totalTests,
         int totalErrors,
         int totalFailures,
+        @Nullable
+        String failureMessage,
         int totalTestcaseFlakyErrors,
         int totalTestcaseFlakyFailures,
         int totalTestcaseErrors,
@@ -54,6 +59,7 @@ public final class TestTaskOutput {
         this.totalTests = totalTests;
         this.totalErrors = totalErrors;
         this.totalFailures = totalFailures;
+        this.failureMessage = failureMessage;
         this.totalTestcaseFlakyErrors = totalTestcaseFlakyErrors;
         this.totalTestcaseFlakyFailures = totalTestcaseFlakyFailures;
         this.totalTestcaseErrors = totalTestcaseErrors;
@@ -88,6 +94,11 @@ public final class TestTaskOutput {
         return totalFailures;
     }
 
+    @Nullable
+    public String getFailureMessage() {
+        return failureMessage;
+    }
+
     public int getTotalTestcaseFlakyErrors() {
         return totalTestcaseFlakyErrors;
     }
@@ -106,7 +117,7 @@ public final class TestTaskOutput {
 
     @JsonIgnore
     public boolean hasFailures() {
-        return totalErrors > 0 || totalFailures > 0;
+        return totalErrors > 0 || totalFailures > 0 || failureMessage != null;
     }
 
     @JsonIgnore
@@ -124,6 +135,7 @@ public final class TestTaskOutput {
             ", totalTests=" + totalTests +
             ", totalErrors=" + totalErrors +
             ", totalFailures=" + totalFailures +
+            ", failureMessage='" + failureMessage + '\'' +
             ", totalTestcaseFlakyErrors=" + totalTestcaseFlakyErrors +
             ", totalTestcaseFlakyFailures=" + totalTestcaseFlakyFailures +
             ", totalTestcaseErrors=" + totalTestcaseErrors +

@@ -23,6 +23,7 @@ class TestTaskOutputTest {
             100,
             0,
             0,
+            "failure",
             0,
             0,
             0,
@@ -45,6 +46,7 @@ class TestTaskOutputTest {
         assertEquals(testTestOutput.getTotalTests(), restored.getTotalTests());
         assertEquals(testTestOutput.getTotalErrors(), restored.getTotalErrors());
         assertEquals(testTestOutput.getTotalFailures(), restored.getTotalFailures());
+        assertEquals(testTestOutput.getFailureMessage(), restored.getFailureMessage());
         assertEquals(testTestOutput.getTotalTestcaseFlakyErrors(), restored.getTotalTestcaseFlakyErrors());
         assertEquals(testTestOutput.getTotalTestcaseFlakyFailures(), restored.getTotalTestcaseFlakyFailures());
         assertEquals(testTestOutput.getTotalTestcaseErrors(), restored.getTotalTestcaseErrors());

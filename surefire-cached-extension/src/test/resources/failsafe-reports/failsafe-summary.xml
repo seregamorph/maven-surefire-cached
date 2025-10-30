@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<failsafe-summary xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/failsafe-summary.xsd"
+      result="254" timeout="false">
+    <completed>1</completed>
+    <errors>2</errors>
+    <failures>3</failures>
+    <skipped>4</skipped>
+    <flakes>5</flakes>
+    <failureMessage>org.apache.maven.surefire.booter.SurefireBooterForkException: The forked VM terminated without properly saying goodbye. VM crash or System.exit called?
+        Command was /bin/sh -c cd &apos;/Users/username/acme/server/server/apis/api-integration-test&apos; &amp;&amp; &apos;/Users/username/.sdkman/candidates/java/17.0.16-amzn/bin/java&apos; &apos;-Xmx6144m&apos; &apos;-Djava.awt.headless=true&apos; &apos;-Djava.net.preferIPv4Stack=true&apos; &apos;-Duser.language=en&apos; &apos;-Duser.country=&apos; &apos;-Duser.timezone=UTC&apos; &apos;-XX:-MaxFDLimit&apos; &apos;--add-opens&apos; &apos;java.base/java.lang=ALL-UNNAMED&apos; &apos;-XX:+EnableDynamicAgentLoading&apos; &apos;-jar&apos; &apos;/Users/username/acme/server/server/apis/api-integration-test/target/surefire/surefirebooter-20251030111441466_3.jar&apos; &apos;/Users/username/acme/server/server/apis/api-integration-test/target/surefire&apos; &apos;2025-10-30T11-14-41_424-jvmRun1&apos; &apos;surefire-20251030111441466_1tmp&apos; &apos;surefire_0-20251030111441466_2tmp&apos;
+        Error occurred in starting fork, check output in log
+        Process Exit Code: 1
+        at org.apache.maven.plugin.surefire.booterclient.ForkStarter.fork(ForkStarter.java:643)
+        at org.apache.maven.plugin.surefire.booterclient.ForkStarter.run(ForkStarter.java:285)
+        at org.apache.maven.plugin.surefire.booterclient.ForkStarter.run(ForkStarter.java:250)
+        at org.apache.maven.plugin.surefire.AbstractSurefireMojo.executeProvider(AbstractSurefireMojo.java:1337)
+        at org.apache.maven.plugin.surefire.AbstractSurefireMojo.executeAfterPreconditionsChecked(AbstractSurefireMojo.java:1135)
+        at org.apache.maven.plugin.surefire.AbstractSurefireMojo.execute(AbstractSurefireMojo.java:969)
+        at com.github.seregamorph.maven.test.extension.CachedSurefireDelegateMojo.execute(CachedSurefireDelegateMojo.java:159)
+        at org.apache.maven.plugin.DefaultBuildPluginManager.executeMojo(DefaultBuildPluginManager.java:126)
+        at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute2(MojoExecutor.java:328)
+        at org.apache.maven.lifecycle.internal.MojoExecutor.doExecute(MojoExecutor.java:316)
+        at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:212)
+        at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:174)
+        at org.apache.maven.lifecycle.internal.MojoExecutor.access$000(MojoExecutor.java:75)
+        at org.apache.maven.lifecycle.internal.MojoExecutor$1.run(MojoExecutor.java:162)
+        at org.apache.maven.plugin.DefaultMojosExecutionStrategy.execute(DefaultMojosExecutionStrategy.java:39)
+        at org.apache.maven.lifecycle.internal.MojoExecutor.execute(MojoExecutor.java:159)
+        at org.apache.maven.lifecycle.internal.LifecycleModuleBuilder.buildProject(LifecycleModuleBuilder.java:105)
+        at com.github.seregamorph.maven.turbo.TurboBuilder.lambda$createBuildCallable$2(TurboBuilder.java:243)
+        at com.github.seregamorph.maven.turbo.CurrentProjectExecution.doWithCurrentProject(CurrentProjectExecution.java:36)
+        at com.github.seregamorph.maven.turbo.TurboBuilder.lambda$createBuildCallable$3(TurboBuilder.java:242)
+        at com.github.seregamorph.maven.turbo.SignalingExecutorCompletionService.lambda$submit$1(SignalingExecutorCompletionService.java:62)
+        at com.github.seregamorph.maven.turbo.OrderedCallable.call(OrderedCallable.java:25)
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635)
+        at java.base/java.lang.Thread.run(Thread.java:840)
+    </failureMessage>
+</failsafe-summary>
