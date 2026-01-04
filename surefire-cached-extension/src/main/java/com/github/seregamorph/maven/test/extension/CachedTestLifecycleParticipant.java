@@ -77,7 +77,23 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
 
     @Override
     public void afterSessionEnd(MavenSession session) {
-        CacheReport cacheReport = testTaskCacheHelper.getCacheReport();
+        if (testTaskCacheHelper.wasPluginManagerInstantiated()) {
+            CacheReport cacheReport = testTaskCacheHelper.getCacheReport();
+            Map<PluginName, Map<TaskOutcome, AggResult>> pluginResults = handleReport(cacheReport);
+            if (isLogStorageMetrics(testTaskCacheHelper.getCacheStorage())) {
+                logStorageMetrics(testTaskCacheHelper.getMetrics());
+            }
+            saveJsonReport(session, pluginResults);
+        } else {
+            // See issue #23 for more details
+            File extensionXmlFile = new File(session.getExecutionRootDirectory(), ".mvn/extensions.xml");
+            logger.warn("The surefire-cached-extension is not properly set up (hence not working).\n"
+                + "Please add extension to {} (but not the pom.xml)", extensionXmlFile.getAbsolutePath());
+        }
+        this.testTaskCacheHelper.destroy();
+    }
+
+    private Map<PluginName, Map<TaskOutcome, AggResult>> handleReport(CacheReport cacheReport) {
         Map<PluginName, Map<TaskOutcome, AggResult>> pluginResults = new TreeMap<>();
         for (PluginName pluginName : Arrays.asList(PluginName.SUREFIRE_CACHED, PluginName.FAILSAFE_CACHED)) {
             Map<TaskOutcome, AggResult> pluginResult = new TreeMap<>();
@@ -107,11 +123,7 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
                 pluginResults.put(pluginName, pluginResult);
             }
         }
-        if (isLogStorageMetrics(testTaskCacheHelper.getCacheStorage())) {
-            logStorageMetrics(testTaskCacheHelper.getMetrics());
-        }
-        saveJsonReport(session, pluginResults);
-        this.testTaskCacheHelper.destroy();
+        return pluginResults;
     }
 
     private boolean isLogStorageMetrics(CacheStorage cacheStorage) {

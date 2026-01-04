@@ -52,6 +52,8 @@ public class CachedMavenPluginManager implements MavenPluginManager {
     ) {
         this.defaultMavenPluginManagerProvider = defaultMavenPluginManagerProvider;
         this.testTaskCacheHelper = testTaskCacheHelper;
+
+        testTaskCacheHelper.notifyPluginManagerInstantiated();
     }
 
     @Override

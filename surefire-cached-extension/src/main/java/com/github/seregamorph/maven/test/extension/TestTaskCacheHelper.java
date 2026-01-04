@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import javax.inject.Singleton;
 import org.apache.maven.artifact.Artifact;
@@ -34,6 +35,8 @@ import org.apache.maven.project.MavenProject;
  */
 @Singleton
 public class TestTaskCacheHelper {
+
+    private final AtomicBoolean pluginManagerInstantiated = new AtomicBoolean();
 
     private FileHashCache fileHashCache;
     private SortedSet<GroupArtifactId> modules;
@@ -64,6 +67,14 @@ public class TestTaskCacheHelper {
         metrics = null;
         modules = null;
         fileHashCache = null;
+    }
+
+    void notifyPluginManagerInstantiated() {
+        pluginManagerInstantiated.set(true);
+    }
+
+    boolean wasPluginManagerInstantiated() {
+        return pluginManagerInstantiated.get();
     }
 
     public CacheServiceMetrics getMetrics() {
