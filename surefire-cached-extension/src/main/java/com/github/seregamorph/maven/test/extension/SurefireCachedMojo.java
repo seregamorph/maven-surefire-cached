@@ -1,12 +1,16 @@
 package com.github.seregamorph.maven.test.extension;
 
+import com.github.seregamorph.maven.test.common.FlakyFailure;
 import com.github.seregamorph.maven.test.common.OutputArtifact;
 import com.github.seregamorph.maven.test.common.PluginName;
 import com.github.seregamorph.maven.test.common.TestTaskOutput;
 import com.github.seregamorph.maven.test.core.TestSuiteReport;
+import com.github.seregamorph.maven.test.core.TestcaseFailure;
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.maven.execution.MavenSession;
@@ -32,34 +36,29 @@ class SurefireCachedMojo extends AbstractCachedSurefireMojo {
 
     @Override
     TestTaskOutput getTaskOutput(Instant startTime, Instant endTime) {
-        File[] testReports = reportsDirectory.listFiles((dir, name) ->
-            name.startsWith("TEST-") && name.endsWith(".xml"));
-
-        if (testReports == null) {
-            testReports = new File[0];
-        }
-
+        Map<File, TestSuiteReport> testReports = TestSuiteReport.fromDirectory(reportsDirectory);
         BigDecimal totalTestTimeSeconds = BigDecimal.ZERO;
         int totalTests = 0;
         int totalErrors = 0;
         int totalFailures = 0;
-        int totalTestcaseFlakyErrors = 0;
-        int totalTestcaseFlakyFailures = 0;
-        int totalTestcaseErrors = 0;
-        for (File testReport : testReports) {
-            TestSuiteReport testSuiteSummary = TestSuiteReport.fromFile(testReport);
+        List<FlakyFailure> testcaseFlakyErrors = new ArrayList<>();
+        List<FlakyFailure> testcaseFlakyFailures = new ArrayList<>();
+        List<FlakyFailure> testcaseErrors = new ArrayList<>();
+        for (Map.Entry<File, TestSuiteReport> entry : testReports.entrySet()) {
+            File testReport = entry.getKey();
+            TestSuiteReport testSuiteSummary = entry.getValue();
             totalTestTimeSeconds = totalTestTimeSeconds.add(testSuiteSummary.timeSeconds());
             totalTests += testSuiteSummary.tests();
             totalErrors += testSuiteSummary.errors();
             totalFailures += testSuiteSummary.failures();
-            totalTestcaseFlakyErrors += testSuiteSummary.testcaseFlakyErrors();
-            totalTestcaseFlakyFailures += testSuiteSummary.testcaseFlakyFailures();
-            totalTestcaseErrors += testSuiteSummary.testcaseErrors();
+            testcaseFlakyErrors.addAll(formatFailures(testSuiteSummary.testcaseFlakyErrors()));
+            testcaseFlakyFailures.addAll(formatFailures(testSuiteSummary.testcaseFlakyFailures()));
+            testcaseErrors.addAll(formatFailures(testSuiteSummary.testcaseErrors()));
             if (testSuiteSummary.errors() > 0 || testSuiteSummary.failures() > 0
-                || testSuiteSummary.testcaseErrors() > 0) {
+                || !testSuiteSummary.testcaseErrors().isEmpty()) {
                 log.warn("{} has errors or failures, skipping cache", testReport);
-            } else if (testSuiteSummary.testcaseFlakyErrors() > 0
-                || testSuiteSummary.testcaseFlakyFailures() > 0) {
+            } else if (!testSuiteSummary.testcaseFlakyErrors().isEmpty()
+                || !testSuiteSummary.testcaseFlakyFailures().isEmpty()) {
                 log.warn("{} has flaky errors", testReport);
             }
         }
@@ -68,7 +67,17 @@ class SurefireCachedMojo extends AbstractCachedSurefireMojo {
         Map<String, OutputArtifact> artifacts = new TreeMap<>();
         return new TestTaskOutput(startTime, endTime, getTotalTimeSeconds(startTime, endTime),
             totalTestTimeSeconds, totalTests, totalErrors, totalFailures, null,
-            totalTestcaseFlakyErrors, totalTestcaseFlakyFailures, totalTestcaseErrors,
+            testcaseFlakyErrors, testcaseFlakyFailures, testcaseErrors,
             artifacts);
+    }
+
+    static List<FlakyFailure> formatFailures(List<TestcaseFailure> failures) {
+        List<FlakyFailure> result = new ArrayList<>();
+        for (TestcaseFailure failure : failures) {
+            FlakyFailure flakyFailure = new FlakyFailure(failure.getTestcase().getClassname(),
+                failure.getTestcase().getName());
+            result.add(flakyFailure);
+        }
+        return result;
     }
 }

@@ -4,6 +4,8 @@ import static com.github.seregamorph.maven.test.util.ByteSizeFormatUtils.formatB
 import static com.github.seregamorph.maven.test.util.TimeFormatUtils.formatTime;
 import static com.github.seregamorph.maven.test.util.TimeFormatUtils.toSeconds;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.github.seregamorph.maven.test.common.FlakyFailure;
 import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import com.github.seregamorph.maven.test.common.PluginName;
 import com.github.seregamorph.maven.test.core.TaskOutcome;
@@ -22,6 +24,7 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.inject.Named;
 import org.apache.maven.AbstractMavenLifecycleParticipant;
@@ -43,11 +46,23 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
 
         private final SortedSet<GroupArtifactId> modules = new TreeSet<>();
 
+        @JsonInclude(JsonInclude.Include.NON_EMPTY)
+        private final SortedSet<String> flakyTests = new TreeSet<>();
+
         private BigDecimal totalTimeSec = BigDecimal.ZERO;
 
-        void add(GroupArtifactId groupArtifactId, BigDecimal time) {
-            modules.add(groupArtifactId);
-            totalTimeSec = totalTimeSec.add(time);
+        void add(ModuleTestResult moduleTestResult) {
+            modules.add(moduleTestResult.getGroupArtifactId());
+            totalTimeSec = totalTimeSec.add(moduleTestResult.getTotalTimeSeconds());
+            flakyTests.addAll(formatFlakyFailures(moduleTestResult.getTestcaseFlakyErrors()));
+            flakyTests.addAll(formatFlakyFailures(moduleTestResult.getTestcaseFlakyFailures()));
+            flakyTests.addAll(formatFlakyFailures(moduleTestResult.getTestcaseErrors()));
+        }
+
+        private static List<String> formatFlakyFailures(List<FlakyFailure> flakyFailures) {
+            return flakyFailures.stream()
+                .map(ff -> ff.getTestClassName() + "#" + ff.getTestName())
+                .collect(Collectors.toList());
         }
 
         public SortedSet<GroupArtifactId> getModules() {
@@ -60,6 +75,10 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
 
         public BigDecimal getTotalTimeSec() {
             return totalTimeSec;
+        }
+
+        public SortedSet<String> getFlakyTests() {
+            return flakyTests;
         }
     }
 
@@ -101,7 +120,7 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
             List<ModuleTestResult> executionResults = cacheReport.getExecutionResults(pluginName);
             for (ModuleTestResult executionResult : executionResults) {
                 pluginResult.computeIfAbsent(executionResult.getResult(), $ -> new AggResult())
-                    .add(executionResult.getGroupArtifactId(), executionResult.getTotalTimeSeconds());
+                    .add(executionResult);
                 deleted += executionResult.getDeletedCacheEntries();
             }
             if (!pluginResult.isEmpty()) {

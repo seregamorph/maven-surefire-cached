@@ -5,6 +5,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -30,9 +32,9 @@ public final class TestTaskOutput {
     private final int totalFailures;
     @Nullable
     private final String failureMessage;
-    private final int totalTestcaseFlakyErrors;
-    private final int totalTestcaseFlakyFailures;
-    private final int totalTestcaseErrors;
+    private final List<FlakyFailure> testcaseFlakyErrors;
+    private final List<FlakyFailure> testcaseFlakyFailures;
+    private final List<FlakyFailure> testcaseErrors;
     // alias -> artifact
     private final Map<String, OutputArtifact> artifacts;
 
@@ -47,9 +49,9 @@ public final class TestTaskOutput {
         int totalFailures,
         @Nullable
         String failureMessage,
-        int totalTestcaseFlakyErrors,
-        int totalTestcaseFlakyFailures,
-        int totalTestcaseErrors,
+        List<FlakyFailure> testcaseFlakyErrors,
+        List<FlakyFailure> testcaseFlakyFailures,
+        List<FlakyFailure> testcaseErrors,
         Map<String, OutputArtifact> artifacts
     ) {
         this.startTime = startTime;
@@ -60,9 +62,9 @@ public final class TestTaskOutput {
         this.totalErrors = totalErrors;
         this.totalFailures = totalFailures;
         this.failureMessage = failureMessage;
-        this.totalTestcaseFlakyErrors = totalTestcaseFlakyErrors;
-        this.totalTestcaseFlakyFailures = totalTestcaseFlakyFailures;
-        this.totalTestcaseErrors = totalTestcaseErrors;
+        this.testcaseFlakyErrors = testcaseFlakyErrors == null ? Collections.emptyList() : testcaseFlakyErrors;
+        this.testcaseFlakyFailures = testcaseFlakyFailures  == null ? Collections.emptyList() : testcaseFlakyFailures;
+        this.testcaseErrors = testcaseErrors  == null ? Collections.emptyList() : testcaseErrors;
         this.artifacts = artifacts;
     }
 
@@ -99,16 +101,16 @@ public final class TestTaskOutput {
         return failureMessage;
     }
 
-    public int getTotalTestcaseFlakyErrors() {
-        return totalTestcaseFlakyErrors;
+    public List<FlakyFailure> getTestcaseFlakyErrors() {
+        return testcaseFlakyErrors;
     }
 
-    public int getTotalTestcaseFlakyFailures() {
-        return totalTestcaseFlakyFailures;
+    public List<FlakyFailure> getTestcaseFlakyFailures() {
+        return testcaseFlakyFailures;
     }
 
-    public int getTotalTestcaseErrors() {
-        return totalTestcaseErrors;
+    public List<FlakyFailure> getTestcaseErrors() {
+        return testcaseErrors;
     }
 
     public Map<String, OutputArtifact> getArtifacts() {
@@ -122,7 +124,7 @@ public final class TestTaskOutput {
 
     @JsonIgnore
     public boolean hasFlakyFailures() {
-        return totalTestcaseFlakyErrors > 0 || totalTestcaseFlakyFailures > 0;
+        return !testcaseFlakyErrors.isEmpty() || !testcaseFlakyFailures.isEmpty();
     }
 
     @Override
@@ -136,9 +138,9 @@ public final class TestTaskOutput {
             ", totalErrors=" + totalErrors +
             ", totalFailures=" + totalFailures +
             ", failureMessage='" + failureMessage + '\'' +
-            ", totalTestcaseFlakyErrors=" + totalTestcaseFlakyErrors +
-            ", totalTestcaseFlakyFailures=" + totalTestcaseFlakyFailures +
-            ", totalTestcaseErrors=" + totalTestcaseErrors +
+            ", testcaseFlakyErrors=" + testcaseFlakyErrors +
+            ", testcaseFlakyFailures=" + testcaseFlakyFailures +
+            ", testcaseErrors=" + testcaseErrors +
             ", artifacts=" + artifacts +
             '}';
     }

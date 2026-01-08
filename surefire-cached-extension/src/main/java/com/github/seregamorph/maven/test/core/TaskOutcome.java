@@ -8,7 +8,12 @@ import javax.annotation.Nullable;
  */
 public enum TaskOutcome {
 
-    SKIPPED_CACHE("serial time", true),
+    SKIPPED_CACHE("serial time", true) {
+        @Override
+        public String message(TestTaskOutput testTaskOutput) {
+            return null;
+        }
+    },
     SUCCESS("serial time", true) {
         @Override
         public String message(TestTaskOutput testTaskOutput) {
@@ -19,9 +24,9 @@ public enum TaskOutcome {
     FLAKY("serial time", true) {
         @Override
         public String message(TestTaskOutput testTaskOutput) {
-            return "(flaky errors " + testTaskOutput.getTotalTestcaseFlakyErrors()
-                + ", flaky failures " + testTaskOutput.getTotalTestcaseFlakyFailures()
-                + ", failures " + testTaskOutput.getTotalTestcaseErrors() + ")";
+            return "(flaky errors " + testTaskOutput.getTestcaseFlakyErrors().size()
+                + ", flaky failures " + testTaskOutput.getTestcaseFlakyFailures().size()
+                + ", failures " + testTaskOutput.getTestcaseErrors().size() + ")";
         }
     },
     FAILED("serial time", true) {
@@ -31,7 +36,12 @@ public enum TaskOutcome {
                 + ", failures " + testTaskOutput.getTotalFailures() + ")";
         }
     },
-    EMPTY("serial time", false),
+    EMPTY("serial time", false) {
+        @Override
+        public String message(TestTaskOutput testTaskOutput) {
+            return null;
+        }
+    },
     FROM_CACHE("serial time saved", true) {
         @Override
         public String message(TestTaskOutput testTaskOutput) {
@@ -60,7 +70,5 @@ public enum TaskOutcome {
     }
 
     @Nullable
-    public String message(TestTaskOutput testTaskOutput) {
-        return null;
-    }
+    public abstract String message(TestTaskOutput testTaskOutput);
 }

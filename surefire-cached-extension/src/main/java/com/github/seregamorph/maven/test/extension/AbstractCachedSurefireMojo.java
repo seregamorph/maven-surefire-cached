@@ -87,7 +87,9 @@ abstract class AbstractCachedSurefireMojo extends AbstractMojo {
     private void reportCachedExecution(TaskOutcome result, TestTaskOutput testTaskOutput, int deletedCacheEntries) {
         GroupArtifactId groupArtifactId = getGroupArtifactId(project);
         ModuleTestResult moduleTestResult = new ModuleTestResult(groupArtifactId, result,
-            testTaskOutput.getTotalTimeSeconds(), deletedCacheEntries);
+            testTaskOutput.getTotalTimeSeconds(), deletedCacheEntries,
+            testTaskOutput.getTestcaseFlakyErrors(), testTaskOutput.getTestcaseFlakyFailures(),
+            testTaskOutput.getTestcaseErrors());
         cacheReport.addExecutionResult(groupArtifactId, pluginName, moduleTestResult);
 
         String message = result.message(testTaskOutput);
@@ -167,7 +169,7 @@ abstract class AbstractCachedSurefireMojo extends AbstractMojo {
             if (testTaskOutput.hasFailures()) {
                 log.warn("Tests failed, not storing to cache. See {}", reportsDirectory);
                 reportCachedExecution(TaskOutcome.FAILED, testTaskOutput);
-            } else if (testTaskOutput.getTotalTestcaseErrors() > 0 ||
+            } else if (!testTaskOutput.getTestcaseErrors().isEmpty() ||
                 !cacheIfTestcaseFlakyErrors && testTaskOutput.hasFlakyFailures()) {
                 log.warn("Tests have testcase failures or flaky errors, not storing to cache. See {}",
                     reportsDirectory);

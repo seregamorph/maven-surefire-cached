@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import java.io.File;
 import java.math.BigDecimal;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class TestSuiteReportTest {
@@ -19,8 +20,9 @@ class TestSuiteReportTest {
         assertEquals(1, testSuiteReport.tests());
         assertEquals(0, testSuiteReport.errors());
         assertEquals(0, testSuiteReport.failures());
-        assertEquals(0, testSuiteReport.testcaseFlakyErrors());
-        assertEquals(0, testSuiteReport.testcaseErrors());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyErrors());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyFailures());
+        assertEquals(List.of(), testSuiteReport.testcaseErrors());
     }
 
     @Test
@@ -33,9 +35,9 @@ class TestSuiteReportTest {
         assertEquals(1, testSuiteReport.tests());
         assertEquals(0, testSuiteReport.errors());
         assertEquals(0, testSuiteReport.failures());
-        assertEquals(0, testSuiteReport.testcaseFlakyErrors());
-        assertEquals(0, testSuiteReport.testcaseFlakyFailures());
-        assertEquals(0, testSuiteReport.testcaseErrors());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyErrors());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyFailures());
+        assertEquals(List.of(), testSuiteReport.testcaseErrors());
     }
 
     @Test
@@ -48,9 +50,9 @@ class TestSuiteReportTest {
         assertEquals(1, testSuiteReport.tests());
         assertEquals(0, testSuiteReport.errors());
         assertEquals(0, testSuiteReport.failures());
-        assertEquals(1, testSuiteReport.testcaseFlakyErrors());
-        assertEquals(0, testSuiteReport.testcaseFlakyFailures());
-        assertEquals(1, testSuiteReport.testcaseErrors());
+        assertEquals("[TestcaseFailure{testcase=Testcase{classname='com.github.seregamorph.testsmartcontext.demo.FlakyTest', name='testGetSubscriptionId_MicroserviceEnabled'}, type='org.grpcmock.exception.GrpcMockException', message='failed to start gRPC Mock server'}]", testSuiteReport.testcaseFlakyErrors().toString());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyFailures());
+        assertEquals("[TestcaseFailure{testcase=Testcase{classname='com.github.seregamorph.testsmartcontext.demo.FlakyTest', name=''}, type='org.grpcmock.exception.GrpcMockException', message='failed to start gRPC Mock server'}]", testSuiteReport.testcaseErrors().toString());
     }
 
     @Test
@@ -63,9 +65,11 @@ class TestSuiteReportTest {
         assertEquals(1, testSuiteReport.tests());
         assertEquals(0, testSuiteReport.errors());
         assertEquals(0, testSuiteReport.failures());
-        assertEquals(0, testSuiteReport.testcaseFlakyErrors());
-        assertEquals(1, testSuiteReport.testcaseFlakyFailures());
-        assertEquals(0, testSuiteReport.testcaseErrors());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyErrors());
+        assertEquals("[TestcaseFailure{testcase=Testcase{classname='projects.pt.server.architecture.transactional.TransactionalMethodsCallersArchTest', name='transactionalMethods_shouldNotSelfCall'}, type='java.lang.AssertionError', message='Architecture Violation [Priority: MEDIUM] - Rule 'methods that annotated with @Transactional should be public and should not be final and should not be static and should overrides only an interface method if any and should not has class constructor direct calls (only via DI), because this is required to manage transactions with PROXY advice mode' was violated (1 times):\n"
+            + "Constructor Class <com.miro.domain.OrganizationDataDeleters$AllTablesOrganizationDataDeleter> is being called.\n"
+            + "Constructor <com.miro.domain.OrganizationDataDeleters.<init>(java.util.List)> calls constructor <com.miro.domain.OrganizationDataDeleters$AllTablesOrganizationDataDeleter.<init>(java.util.List)> in (OrganizationDataDeleters.kt:16)'}]", testSuiteReport.testcaseFlakyFailures().toString());
+        assertEquals(List.of(), testSuiteReport.testcaseErrors());
     }
 
     private static File getResourceFile(String name) {
