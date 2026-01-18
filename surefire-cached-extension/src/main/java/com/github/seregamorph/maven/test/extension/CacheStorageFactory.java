@@ -9,7 +9,6 @@ import com.github.seregamorph.maven.test.storage.HttpCacheStorage;
 import com.github.seregamorph.maven.test.storage.HttpCacheStorageConfig;
 import com.github.seregamorph.maven.test.util.PropertySource;
 import java.io.File;
-import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ServiceLoader;
@@ -22,12 +21,9 @@ import org.slf4j.LoggerFactory;
  */
 class CacheStorageFactory {
 
-    private static final Logger LOGGER =  LoggerFactory.getLogger(
-        MethodHandles.lookup().lookupClass()
-    );
+    private static final Logger LOGGER =  LoggerFactory.getLogger(CacheStorageFactory.class);
 
     private static final String PROP_CACHE_STORAGE_URL = "cacheStorageUrl";
-
     private static final String PROP_MAX_CACHE_ENTRIES = "maxCacheEntries";
 
     private static final String DEFAULT_CACHE_ENTRIES = "4";
