@@ -136,6 +136,7 @@ Parameters:
 | Parameter              | Comment                                                                                      | Default value |
 |------------------------|----------------------------------------------------------------------------------------------|---------------|
 | `cacheExpirationHours` | Time interval in hours for how long the cache entity is valid. Now used only for s3 storage. | 6             |
+| `maxCacheEntries` | Maximum number of different caches for a combination of same `groupId.artifactId.version`. Can use in CI for shared `FileCache`.| 4             |
 
 ## Sample adoption:
 * https://github.com/seregamorph/spring-test-smart-context/pull/23

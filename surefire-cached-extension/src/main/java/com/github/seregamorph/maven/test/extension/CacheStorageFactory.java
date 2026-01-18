@@ -9,17 +9,28 @@ import com.github.seregamorph.maven.test.storage.HttpCacheStorage;
 import com.github.seregamorph.maven.test.storage.HttpCacheStorageConfig;
 import com.github.seregamorph.maven.test.util.PropertySource;
 import java.io.File;
+import java.lang.invoke.MethodHandles;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ServiceLoader;
 import javax.annotation.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Sergey Chernov
  */
 class CacheStorageFactory {
 
+    private static final Logger LOGGER =  LoggerFactory.getLogger(
+        MethodHandles.lookup().lookupClass()
+    );
+
     private static final String PROP_CACHE_STORAGE_URL = "cacheStorageUrl";
+
+    private static final String PROP_MAX_CACHE_ENTRIES = "maxCacheEntries";
+
+    private static final String DEFAULT_CACHE_ENTRIES = "4";
 
     private final PropertySource propertySource;
 
@@ -63,8 +74,8 @@ class CacheStorageFactory {
                 + "    </extension>\n"
                 + "instead of surefire-cached-extension in .mvn/extensions.xml");
         }
-
-        return new FileCacheStorage(new File(cacheStorageUrl));
+        int maxCacheEntries = getMaxCacheEntries();
+        return new FileCacheStorage(new File(cacheStorageUrl), maxCacheEntries);
     }
 
     private HttpCacheStorage createHttpCacheStorage(String cacheStorageUrl) {
@@ -81,5 +92,12 @@ class CacheStorageFactory {
             connectTimeout, readTimeout, writeTimeout,
             cacheHashPrefix);
         return new HttpCacheStorage(httpCacheStorageConfig);
+    }
+
+    private int getMaxCacheEntries() {
+        String maxCacheEntriesValue = propertySource.getProperty(PROP_MAX_CACHE_ENTRIES,
+                                                                 DEFAULT_CACHE_ENTRIES);
+        LOGGER.debug("maxCacheEntries: {}", maxCacheEntriesValue);
+        return Integer.parseInt(maxCacheEntriesValue);
     }
 }
