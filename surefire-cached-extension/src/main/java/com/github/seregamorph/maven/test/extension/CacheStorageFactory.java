@@ -7,6 +7,7 @@ import com.github.seregamorph.maven.test.storage.CacheStorage;
 import com.github.seregamorph.maven.test.storage.FileCacheStorage;
 import com.github.seregamorph.maven.test.storage.HttpCacheStorage;
 import com.github.seregamorph.maven.test.storage.HttpCacheStorageConfig;
+import com.github.seregamorph.maven.test.util.EnvironmentUtils;
 import com.github.seregamorph.maven.test.util.PropertySource;
 import java.io.File;
 import java.net.URI;
@@ -21,12 +22,16 @@ import org.slf4j.LoggerFactory;
  */
 class CacheStorageFactory {
 
-    private static final Logger LOGGER =  LoggerFactory.getLogger(CacheStorageFactory.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CacheStorageFactory.class);
 
     private static final String PROP_CACHE_STORAGE_URL = "cacheStorageUrl";
     private static final String PROP_MAX_CACHE_ENTRIES = "maxCacheEntries";
 
+    /**
+     * Max number of cache entries per single "$groupId/artifactId" layout
+     */
     private static final String DEFAULT_CACHE_ENTRIES = "4";
+    private static final String DEFAULT_CACHE_ENTRIES_CI = "16";
 
     private final PropertySource propertySource;
 
@@ -71,6 +76,7 @@ class CacheStorageFactory {
                 + "instead of surefire-cached-extension in .mvn/extensions.xml");
         }
         int maxCacheEntries = getMaxCacheEntries();
+        LOGGER.debug("maxCacheEntries for FileCacheStorage: {}", maxCacheEntries);
         return new FileCacheStorage(new File(cacheStorageUrl), maxCacheEntries);
     }
 
@@ -91,9 +97,8 @@ class CacheStorageFactory {
     }
 
     private int getMaxCacheEntries() {
-        String maxCacheEntriesValue = propertySource.getProperty(PROP_MAX_CACHE_ENTRIES,
-                                                                 DEFAULT_CACHE_ENTRIES);
-        LOGGER.debug("maxCacheEntries: {}", maxCacheEntriesValue);
-        return Integer.parseInt(maxCacheEntriesValue);
+        String defaultCacheEntries = EnvironmentUtils.isCi() ? DEFAULT_CACHE_ENTRIES_CI : DEFAULT_CACHE_ENTRIES;
+        String maxCacheEntries = propertySource.getProperty(PROP_MAX_CACHE_ENTRIES, defaultCacheEntries);
+        return Integer.parseInt(maxCacheEntries);
     }
 }

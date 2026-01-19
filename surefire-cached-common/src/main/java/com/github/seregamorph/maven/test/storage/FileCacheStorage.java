@@ -22,17 +22,8 @@ public class FileCacheStorage implements CacheStorage {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(FileCacheStorage.class);
 
-    /**
-     * Max number of cache entries per single "$groupId/artifactId" layout
-     */
-    private static final int MAX_CACHE_ENTRIES = 4;
-
     private final File baseDir;
     private final int maxCacheEntries;
-
-    public FileCacheStorage(File baseDir) {
-        this(baseDir, MAX_CACHE_ENTRIES);
-    }
 
     public FileCacheStorage(File baseDir, int maxCacheEntries) {
         if (maxCacheEntries < 1) {
