@@ -58,7 +58,7 @@ class TestSuiteReportTest {
     @Test
     public void testSurefireFlakyFailureReports() {
         var testSuiteReport = TestSuiteReport.fromFile(getResourceFile(
-            "surefire-reports/TEST-com.github.seregamorph.testsmartcontext.demo.FlakyFailureTest.xml.xml"));
+            "surefire-reports/TEST-com.github.seregamorph.testsmartcontext.demo.FlakyFailureTest.xml"));
 
         assertEquals("com.github.seregamorph.testsmartcontext.demo.FlakyFailureTest", testSuiteReport.name());
         assertEquals(new BigDecimal("0.005"), testSuiteReport.timeSeconds());
@@ -70,6 +70,22 @@ class TestSuiteReportTest {
             + "Constructor Class <com.miro.domain.OrganizationDataDeleters$AllTablesOrganizationDataDeleter> is being called.\n"
             + "Constructor <com.miro.domain.OrganizationDataDeleters.<init>(java.util.List)> calls constructor <com.miro.domain.OrganizationDataDeleters$AllTablesOrganizationDataDeleter.<init>(java.util.List)> in (OrganizationDataDeleters.kt:16)'}]", testSuiteReport.testcaseFlakyFailures().toString());
         assertEquals(List.of(), testSuiteReport.testcaseErrors());
+    }
+
+    @Test
+    public void testSurefireRetriedFailureReports() {
+        var testSuiteReport = TestSuiteReport.fromFile(getResourceFile(
+            "surefire-reports/TEST-com.github.seregamorph.testsmartcontext.demo.RetriedFailureTest.xml"));
+
+        assertEquals("com.github.seregamorph.testsmartcontext.demo.RetriedFailureTest", testSuiteReport.name());
+        assertEquals(new BigDecimal("0.019"), testSuiteReport.timeSeconds());
+        assertEquals(1, testSuiteReport.tests());
+        assertEquals(0, testSuiteReport.errors());
+        assertEquals(0, testSuiteReport.failures());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyErrors());
+        assertEquals(List.of(), testSuiteReport.testcaseFlakyFailures());
+        assertEquals(List.of(), testSuiteReport.testcaseErrors());
+        assertEquals("[TestcaseFailure{testcase=Testcase{classname='com.github.seregamorph.testsmartcontext.demo.RetriedFailureTest', name='after space shutdown no new tasks is going to be executed[1]'}, type='java.lang.AssertionError', message='expected [2] but found [1]'}]", testSuiteReport.testcaseFailures().toString());
     }
 
     private static File getResourceFile(String name) {

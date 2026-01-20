@@ -44,6 +44,7 @@ class SurefireCachedMojo extends AbstractCachedSurefireMojo {
         List<FlakyFailure> testcaseFlakyErrors = new ArrayList<>();
         List<FlakyFailure> testcaseFlakyFailures = new ArrayList<>();
         List<FlakyFailure> testcaseErrors = new ArrayList<>();
+        List<FlakyFailure> testcaseFailures = new ArrayList<>();
         for (Map.Entry<File, TestSuiteReport> entry : testReports.entrySet()) {
             File testReport = entry.getKey();
             TestSuiteReport testSuiteSummary = entry.getValue();
@@ -54,8 +55,10 @@ class SurefireCachedMojo extends AbstractCachedSurefireMojo {
             testcaseFlakyErrors.addAll(formatFailures(testSuiteSummary.testcaseFlakyErrors()));
             testcaseFlakyFailures.addAll(formatFailures(testSuiteSummary.testcaseFlakyFailures()));
             testcaseErrors.addAll(formatFailures(testSuiteSummary.testcaseErrors()));
+            testcaseFailures.addAll(formatFailures(testSuiteSummary.testcaseFailures()));
             if (testSuiteSummary.errors() > 0 || testSuiteSummary.failures() > 0
-                || !testSuiteSummary.testcaseErrors().isEmpty()) {
+                || !testSuiteSummary.testcaseErrors().isEmpty()
+                || !testSuiteSummary.testcaseFailures().isEmpty()) {
                 log.warn("{} has errors or failures, skipping cache", testReport);
             } else if (!testSuiteSummary.testcaseFlakyErrors().isEmpty()
                 || !testSuiteSummary.testcaseFlakyFailures().isEmpty()) {
@@ -67,7 +70,7 @@ class SurefireCachedMojo extends AbstractCachedSurefireMojo {
         Map<String, OutputArtifact> artifacts = new TreeMap<>();
         return new TestTaskOutput(startTime, endTime, getTotalTimeSeconds(startTime, endTime),
             totalTestTimeSeconds, totalTests, totalErrors, totalFailures, null,
-            testcaseFlakyErrors, testcaseFlakyFailures, testcaseErrors,
+            testcaseFlakyErrors, testcaseFlakyFailures, testcaseErrors, testcaseFailures,
             artifacts);
     }
 

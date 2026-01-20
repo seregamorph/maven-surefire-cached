@@ -26,6 +26,7 @@ public final class TestSuiteReport {
     private final List<TestcaseFailure> testcaseFlakyErrors;
     private final List<TestcaseFailure> testcaseFlakyFailures;
     private final List<TestcaseFailure> testcaseErrors;
+    private final List<TestcaseFailure> testcaseFailures;
 
     public TestSuiteReport(
         String name,
@@ -35,7 +36,8 @@ public final class TestSuiteReport {
         int failures,
         List<TestcaseFailure> testcaseFlakyErrors,
         List<TestcaseFailure> testcaseFlakyFailures,
-        List<TestcaseFailure> testcaseErrors
+        List<TestcaseFailure> testcaseErrors,
+        List<TestcaseFailure> testcaseFailures
     ) {
         this.name = name;
         this.timeSeconds = timeSeconds;
@@ -45,6 +47,7 @@ public final class TestSuiteReport {
         this.testcaseFlakyErrors = testcaseFlakyErrors;
         this.testcaseFlakyFailures = testcaseFlakyFailures;
         this.testcaseErrors = testcaseErrors;
+        this.testcaseFailures = testcaseFailures;
     }
 
     public static SortedMap<File, TestSuiteReport> fromDirectory(File reportsDirectory) {
@@ -83,6 +86,7 @@ public final class TestSuiteReport {
         List<TestcaseFailure> testcaseFlakyErrors = new ArrayList<>();
         List<TestcaseFailure> testcaseFlakyFailures = new ArrayList<>();
         List<TestcaseFailure> testcaseErrors = new ArrayList<>();
+        List<TestcaseFailure> testcaseFailures = new ArrayList<>();
         for (int i = 0; i < testcaseList.getLength(); i++) {
             Element testcaseNode = (Element) testcaseList.item(i);
 
@@ -91,10 +95,11 @@ public final class TestSuiteReport {
             // AssertionError
             testcaseFlakyFailures.addAll(getTestcaseFailures(testSuiteName, testcaseNode, "flakyFailure"));
             testcaseErrors.addAll(getTestcaseFailures(testSuiteName, testcaseNode, "error"));
+            testcaseFailures.addAll(getTestcaseFailures(testSuiteName, testcaseNode, "failure"));
         }
 
         return new TestSuiteReport(testSuiteName, timeSeconds, tests, errors, failures,
-            testcaseFlakyErrors, testcaseFlakyFailures, testcaseErrors);
+            testcaseFlakyErrors, testcaseFlakyFailures, testcaseErrors, testcaseFailures);
     }
 
     private static List<TestcaseFailure> getTestcaseFailures(String testSuiteName, Element testcaseNode, String tagName) {
@@ -150,6 +155,10 @@ public final class TestSuiteReport {
         return testcaseErrors;
     }
 
+    public List<TestcaseFailure> testcaseFailures() {
+        return testcaseFailures;
+    }
+
     @Override
     public String toString() {
         return "TestSuiteReport{" +
@@ -161,6 +170,7 @@ public final class TestSuiteReport {
             ", testcaseFlakyErrors=" + testcaseFlakyErrors +
             ", testcaseFlakyFailures=" + testcaseFlakyFailures +
             ", testcaseErrors=" + testcaseErrors +
+            ", testcaseFailures=" + testcaseFailures +
             '}';
     }
 }

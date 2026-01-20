@@ -35,6 +35,7 @@ public final class TestTaskOutput {
     private final List<FlakyFailure> testcaseFlakyErrors;
     private final List<FlakyFailure> testcaseFlakyFailures;
     private final List<FlakyFailure> testcaseErrors;
+    private final List<FlakyFailure> testcaseFailures;
     // alias -> artifact
     private final Map<String, OutputArtifact> artifacts;
 
@@ -52,6 +53,7 @@ public final class TestTaskOutput {
         List<FlakyFailure> testcaseFlakyErrors,
         List<FlakyFailure> testcaseFlakyFailures,
         List<FlakyFailure> testcaseErrors,
+        List<FlakyFailure> testcaseFailures,
         Map<String, OutputArtifact> artifacts
     ) {
         this.startTime = startTime;
@@ -65,6 +67,7 @@ public final class TestTaskOutput {
         this.testcaseFlakyErrors = testcaseFlakyErrors == null ? Collections.emptyList() : testcaseFlakyErrors;
         this.testcaseFlakyFailures = testcaseFlakyFailures  == null ? Collections.emptyList() : testcaseFlakyFailures;
         this.testcaseErrors = testcaseErrors  == null ? Collections.emptyList() : testcaseErrors;
+        this.testcaseFailures = testcaseFailures == null ? Collections.emptyList() : testcaseFailures;
         this.artifacts = artifacts;
     }
 
@@ -113,13 +116,20 @@ public final class TestTaskOutput {
         return testcaseErrors;
     }
 
+    public List<FlakyFailure> getTestcaseFailures() {
+        return testcaseFailures;
+    }
+
     public Map<String, OutputArtifact> getArtifacts() {
         return artifacts;
     }
 
     @JsonIgnore
     public boolean hasFailures() {
-        return totalErrors > 0 || totalFailures > 0 || failureMessage != null;
+        return totalErrors > 0 || totalFailures > 0
+            || !testcaseErrors.isEmpty()
+            || !testcaseFailures.isEmpty()
+            || failureMessage != null;
     }
 
     @JsonIgnore
@@ -141,6 +151,7 @@ public final class TestTaskOutput {
             ", testcaseFlakyErrors=" + testcaseFlakyErrors +
             ", testcaseFlakyFailures=" + testcaseFlakyFailures +
             ", testcaseErrors=" + testcaseErrors +
+            ", testcaseFailures=" + testcaseFailures +
             ", artifacts=" + artifacts +
             '}';
     }

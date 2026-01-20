@@ -28,6 +28,7 @@ class TestTaskOutputTest {
             List.of(),
             List.of(),
             List.of(),
+            List.of(),
             Map.of(
                 "jacoco",
                 new OutputArtifact(

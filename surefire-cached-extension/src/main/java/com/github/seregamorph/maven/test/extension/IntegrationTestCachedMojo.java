@@ -45,7 +45,8 @@ class IntegrationTestCachedMojo extends AbstractCachedSurefireMojo {
         if (!summaryFile.exists()) {
             return new TestTaskOutput(startTime, endTime, totalTimeSeconds,
                 BigDecimal.ZERO, 0, 0, 0, null,
-                Collections.emptyList(), Collections.emptyList(), Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList(),
+                Collections.emptyList(), Collections.emptyList(),
                 new TreeMap<>());
         }
 
@@ -54,11 +55,13 @@ class IntegrationTestCachedMojo extends AbstractCachedSurefireMojo {
         List<FlakyFailure> testcaseFlakyErrors = new ArrayList<>();
         List<FlakyFailure> testcaseFlakyFailures = new ArrayList<>();
         List<FlakyFailure> testcaseErrors = new ArrayList<>();
+        List<FlakyFailure> testcaseFailures = new ArrayList<>();
         for (Map.Entry<File, TestSuiteReport> entry : testReports.entrySet()) {
             TestSuiteReport testSuiteSummary = entry.getValue();
             testcaseFlakyErrors.addAll(formatFailures(testSuiteSummary.testcaseFlakyErrors()));
             testcaseFlakyFailures.addAll(formatFailures(testSuiteSummary.testcaseFlakyFailures()));
             testcaseErrors.addAll(formatFailures(testSuiteSummary.testcaseErrors()));
+            testcaseFailures.addAll(formatFailures(testSuiteSummary.testcaseFailures()));
         }
 
         if (report.getFlakes() > 0 && testcaseFlakyErrors.isEmpty() && testcaseFlakyFailures.isEmpty()) {
@@ -69,6 +72,8 @@ class IntegrationTestCachedMojo extends AbstractCachedSurefireMojo {
         return new TestTaskOutput(startTime, endTime, totalTimeSeconds,
             totalTimeSeconds, report.getCompleted(),
             report.getErrors(), report.getFailures(), report.getFailureMessage(),
-            testcaseFlakyErrors, testcaseFlakyFailures, testcaseErrors, new TreeMap<>());
+            testcaseFlakyErrors, testcaseFlakyFailures,
+            testcaseErrors, testcaseFailures,
+            new TreeMap<>());
     }
 }
