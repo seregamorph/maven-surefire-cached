@@ -1,9 +1,9 @@
 package com.github.seregamorph.maven.test.extension;
 
 import static com.github.seregamorph.maven.test.TestFileUtils.getResourceFile;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
@@ -24,13 +24,13 @@ import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class SurefireCachedMojoTest {
+public class IntegrationTestCachedMojoTest {
 
     private MavenProject project;
     private MavenSession session;
-    private TestSurefireMojo delegate;
+    private TestFailsafeMojo delegate;
     private TestTaskCacheHelper testTaskCacheHelper;
-    private SurefireCachedMojo surefireCachedMojo;
+    private IntegrationTestCachedMojo integrationTestCachedMojo;
 
     @BeforeEach
     public void setUp() {
@@ -53,17 +53,18 @@ public class SurefireCachedMojoTest {
         when(session.getSystemProperties()).thenReturn(new Properties());
         when(session.getUserProperties()).thenReturn(userProperties);
         when(session.getAllProjects()).thenReturn(List.of(project));
-        delegate = mock(TestSurefireMojo.class, withSettings().extraInterfaces(ContextEnabled.class));
+        delegate = mock(TestFailsafeMojo.class, withSettings().extraInterfaces(ContextEnabled.class));
         when(((ContextEnabled) delegate).getPluginContext()).thenReturn(Collections.emptyMap());
-        when(delegate.getReportsDirectory()).thenReturn(getResourceFile("surefire-reports"));
+        when(delegate.getSummaryFile()).thenReturn(getResourceFile("failsafe-reports/failsafe-summary.xml"));
+        when(delegate.getReportsDirectory()).thenReturn(getResourceFile("failsafe-reports"));
         testTaskCacheHelper = new TestTaskCacheHelper();
         testTaskCacheHelper.init(session);
-        surefireCachedMojo = new SurefireCachedMojo(testTaskCacheHelper, session, project, delegate);
+        integrationTestCachedMojo = new IntegrationTestCachedMojo(testTaskCacheHelper, session, project, delegate);
     }
 
     @Test
     public void shouldReturnTaskInput() {
-        var config = surefireCachedMojo.loadEffectiveTestPluginConfig(PluginName.SUREFIRE_CACHED);
+        var config = integrationTestCachedMojo.loadEffectiveTestPluginConfig(PluginName.SUREFIRE_CACHED);
         var testTaskInput = testTaskCacheHelper.getTestTaskInput(session, project, delegate, config);
         assertEquals("1.0", testTaskInput.getIgnoredProperties().get("project.version"));
         assertNotNull(testTaskInput.getIgnoredProperties().get("timestamp"));
@@ -73,27 +74,25 @@ public class SurefireCachedMojoTest {
     public void shouldReturnTaskOutput() {
         var endTime = Instant.now();
         var startTime = endTime.minusSeconds(10);
-        var taskOutput = surefireCachedMojo.getTaskOutput(startTime, endTime);
+        var taskOutput = integrationTestCachedMojo.getTaskOutput(startTime, endTime);
         assertEquals(startTime, taskOutput.getStartTime());
         assertEquals(endTime, taskOutput.getEndTime());
         assertEquals(new BigDecimal("10.000"), taskOutput.getTotalTimeSeconds());
-        assertEquals(new BigDecimal("0.034"), taskOutput.getTotalTestTimeSeconds());
-        assertEquals(4, taskOutput.getTotalTests());
-        assertEquals(0, taskOutput.getTotalErrors());
-        assertEquals(0, taskOutput.getTotalFailures());
-        assertNull(taskOutput.getFailureMessage());
-        assertEquals("[FlakyFailure{testClassName='com.github.seregamorph.testsmartcontext.demo.FlakyTest', "
-            + "testName='testGetSubscriptionId_MicroserviceEnabled'}]", taskOutput.getTestcaseFlakyErrors().toString());
-        assertEquals("[FlakyFailure{testClassName='com.github.seregamorph.testsmartcontext.demo.FlakyFailureTest', "
-            + "testName='transactionalMethods_shouldNotSelfCall'}]", taskOutput.getTestcaseFlakyFailures().toString());
-        assertEquals("[FlakyFailure{testClassName='com.github.seregamorph.testsmartcontext.demo.FlakyTest', "
-            + "testName=''}]", taskOutput.getTestcaseErrors().toString());
-        assertEquals("[FlakyFailure{testClassName='com.github.seregamorph.testsmartcontext.demo.RetriedFailureTest', "
-            + "testName='after space shutdown no new tasks is going to be executed[1]'}]",
-            taskOutput.getTestcaseFailures().toString());
+        assertEquals(new BigDecimal("10.000"), taskOutput.getTotalTestTimeSeconds());
+        assertEquals(1, taskOutput.getTotalTests());
+        assertEquals(2, taskOutput.getTotalErrors());
+        assertEquals(3, taskOutput.getTotalFailures());
+        assertThat(taskOutput.getFailureMessage())
+            .startsWith("org.apache.maven.surefire.booter.SurefireBooterForkException: The forked VM terminated without properly saying goodbye. VM crash or System.exit called?");
+        assertEquals("[FlakyFailure{testClassName='failsafe-summary.xml', testName='flakes'}]", taskOutput.getTestcaseFlakyErrors().toString());
+        assertEquals("[]", taskOutput.getTestcaseFlakyFailures().toString());
+        assertEquals("[]", taskOutput.getTestcaseErrors().toString());
+        assertEquals("[]", taskOutput.getTestcaseFailures().toString());
     }
 
-    private interface TestSurefireMojo extends Mojo {
+    private interface TestFailsafeMojo extends Mojo {
+
+        File getSummaryFile();
 
         File getReportsDirectory();
 

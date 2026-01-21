@@ -1,9 +1,8 @@
 package com.github.seregamorph.maven.test.core;
 
+import static com.github.seregamorph.maven.test.TestFileUtils.getResourceFile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.io.File;
 import java.math.BigDecimal;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -86,11 +85,5 @@ class TestSuiteReportTest {
         assertEquals(List.of(), testSuiteReport.testcaseFlakyFailures());
         assertEquals(List.of(), testSuiteReport.testcaseErrors());
         assertEquals("[TestcaseFailure{testcase=Testcase{classname='com.github.seregamorph.testsmartcontext.demo.RetriedFailureTest', name='after space shutdown no new tasks is going to be executed[1]'}, type='java.lang.AssertionError', message='expected [2] but found [1]'}]", testSuiteReport.testcaseFailures().toString());
-    }
-
-    private static File getResourceFile(String name) {
-        var resource = TestSuiteReportTest.class.getClassLoader().getResource(name);
-        assertNotNull(resource, "Resource not found: " + name);
-        return new File(resource.getFile());
     }
 }

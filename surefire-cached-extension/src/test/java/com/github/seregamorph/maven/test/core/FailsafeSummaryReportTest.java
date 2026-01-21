@@ -1,11 +1,10 @@
 package com.github.seregamorph.maven.test.core;
 
+import static com.github.seregamorph.maven.test.TestFileUtils.getResourceFile;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import java.io.File;
 import org.junit.jupiter.api.Test;
 
 class FailsafeSummaryReportTest {
@@ -36,11 +35,5 @@ class FailsafeSummaryReportTest {
         assertEquals(0, testSuiteReport.getSkipped());
         assertEquals(0, testSuiteReport.getFlakes());
         assertNull(testSuiteReport.getFailureMessage());
-    }
-
-    private static File getResourceFile(String name) {
-        var resource = TestSuiteReportTest.class.getClassLoader().getResource(name);
-        assertNotNull(resource, "Resource not found: " + name);
-        return new File(resource.getFile());
     }
 }
