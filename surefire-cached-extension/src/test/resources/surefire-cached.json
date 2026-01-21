@@ -1,4 +1,9 @@
 {
+  "common": {
+    "excludeModules": [
+      "com.common:common"
+    ]
+  },
   "surefire": {
     "excludeClasspathResources": [
       "META-INF/MANIFEST.MF",

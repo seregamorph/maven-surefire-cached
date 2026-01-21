@@ -2,12 +2,12 @@ package com.github.seregamorph.maven.test.config;
 
 import static com.github.seregamorph.maven.test.TestFileUtils.getResourceFile;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import com.github.seregamorph.maven.test.common.PluginName;
 import java.util.List;
 import org.apache.maven.project.MavenProject;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class TestPluginConfigLoaderTest {
@@ -38,14 +38,13 @@ class TestPluginConfigLoaderTest {
     }
 
     @Test
-    @Disabled // todo fix
     public void shouldLoadEffectiveFailsafeTestPluginConfig() {
         var config = TestPluginConfigLoader.loadEffectiveTestPluginConfig(project, PluginName.FAILSAFE_CACHED);
         assertEquals(List.of("com.acme:core"), config.getExcludeModules());
         assertEquals(List.of("META-INF/MANIFEST.MF", "META-INF/maven/**/pom.properties",
             "META-INF/maven/**/pom.xml"), config.getExcludeClasspathResources());
-        assertEquals(List.of("failsafe-reports/TEST-*.xml"),
+        assertEquals(List.of("failsafe-reports/TEST-*.xml", "failsafe-reports/failsafe-summary.xml"),
             config.getArtifacts().get("failsafe-reports").getIncludes());
-        assertEquals(List.of("jacoco-*.exec"), config.getArtifacts().get("jacoco").getIncludes());
+        assertNull(config.getArtifacts().get("jacoco"));
     }
 }

@@ -20,6 +20,7 @@ import org.apache.maven.project.MavenProject;
  *
  * @author Sergey Chernov
  */
+@SuppressWarnings("ArraysAsListWithZeroOrOneArgument")
 public class TestPluginConfigLoader {
 
     private static final String CONFIG_FILE_NAME = "surefire-cached.json";
@@ -102,8 +103,9 @@ public class TestPluginConfigLoader {
             DEFAULT_SUREFIRE_CONFIG : DEFAULT_FAILSAFE_CONFIG;
         if (mergedConfig == null) {
             return defaultConfig;
+        } else {
+            return merge(mergedConfig, defaultConfig);
         }
-        return merge(mergedConfig, DEFAULT_COMMON_CONFIG);
     }
 
     private static TestPluginConfig mergeCommon(SurefireCachedConfig surefireCachedConfig, PluginName pluginName) {
