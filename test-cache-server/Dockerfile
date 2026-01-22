@@ -1,4 +1,4 @@
-FROM openjdk:17
+FROM eclipse-temurin:17-jdk
 
 ENV SERVICE_HOME=/etc/test-cache-server \
     LANG=C.UTF-8
