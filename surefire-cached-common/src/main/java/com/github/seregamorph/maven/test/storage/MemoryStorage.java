@@ -31,7 +31,7 @@ public class MemoryStorage implements CacheStorage {
 
     @Override
     @Nullable
-    public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
+    public ReadResult read(CacheEntryKey cacheEntryKey, String fileName) {
         synchronized (cache) {
             Map<String, byte[]> cacheEntry = cache.remove(cacheEntryKey);
             if (cacheEntry == null) {
@@ -39,7 +39,8 @@ public class MemoryStorage implements CacheStorage {
             }
             // LRU
             cache.put(cacheEntryKey, cacheEntry);
-            return cacheEntry.get(fileName);
+            byte[] bytes = cacheEntry.get(fileName);
+            return new ReadResult(bytes);
         }
     }
 

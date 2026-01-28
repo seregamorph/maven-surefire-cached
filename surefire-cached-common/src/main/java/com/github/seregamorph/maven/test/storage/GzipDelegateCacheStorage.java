@@ -26,17 +26,18 @@ public class GzipDelegateCacheStorage implements CacheStorage {
 
     @Nullable
     @Override
-    public byte[] read(CacheEntryKey cacheEntryKey, String fileName) throws CacheStorageException {
-        byte[] bytes = delegate.read(cacheEntryKey, fileName);
-        if (bytes == null) {
+    public ReadResult read(CacheEntryKey cacheEntryKey, String fileName) throws CacheStorageException {
+        ReadResult readResult = delegate.read(cacheEntryKey, fileName);
+        if (readResult == null) {
             return null;
         }
         if (isAlreadyCompressed(fileName)) {
             // .tar.gz files were already compressed, no need to unpack
-            return bytes;
+            return readResult;
         } else {
-            try (InputStream in = new GZIPInputStream(new ByteArrayInputStream(bytes))) {
-                return IOUtils.toByteArray(in);
+            try (InputStream in = new GZIPInputStream(new ByteArrayInputStream(readResult.bytes()))) {
+                byte[] bytes = IOUtils.toByteArray(in);
+                return new ReadResult(bytes);
             } catch (IOException e) {
                 throw new CacheStorageException("Error unpacking file " + fileName, e);
             }

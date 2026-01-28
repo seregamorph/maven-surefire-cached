@@ -31,23 +31,23 @@ public class CacheService {
         }
 
         long start = System.nanoTime();
-        Integer bytes = null;
+        Integer length = null;
         try {
-            byte[] entity = cacheStorage.read(cacheEntryKey, fileName);
+            ReadResult entity = cacheStorage.read(cacheEntryKey, fileName);
             if (entity != null) {
-                bytes = entity.length;
+                length = entity.length();
             }
-            return entity;
+            return entity == null ? null : entity.bytes();
         } catch (CacheStorageException e) {
             logger.warn("Failed to read cache entry {}", e.toString());
             metrics.addReadFailure();
             return null;
         } finally {
             long nanos = System.nanoTime() - start;
-            if (bytes == null) {
+            if (length == null) {
                 metrics.addReadMissOperation(nanos);
             } else {
-                metrics.addReadHitOperation(nanos, bytes);
+                metrics.addReadHitOperation(nanos, length);
             }
         }
     }

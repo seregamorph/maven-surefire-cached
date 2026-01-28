@@ -44,13 +44,14 @@ public class FileCacheStorage implements CacheStorage {
     }
 
     @Override
-    public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
+    public ReadResult read(CacheEntryKey cacheEntryKey, String fileName) {
         File file = getEntryFile(cacheEntryKey, fileName);
         if (!file.exists()) {
             return null;
         }
         try {
-            return Files.readAllBytes(file.toPath());
+            byte[] bytes = Files.readAllBytes(file.toPath());
+            return new ReadResult(bytes);
         } catch (IOException e) {
             throw new CacheStorageException("Error reading " + fileName, e);
         }

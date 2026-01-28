@@ -36,7 +36,7 @@ public class S3CacheStorage implements CacheStorage {
 
     @Nullable
     @Override
-    public byte[] read(CacheEntryKey cacheEntryKey, String fileName) throws CacheStorageException {
+    public ReadResult read(CacheEntryKey cacheEntryKey, String fileName) throws CacheStorageException {
         String awsKey = cacheEntryKey + "/" + fileName;
         try {
             try (ResponseInputStream<GetObjectResponse> object =
@@ -48,7 +48,7 @@ public class S3CacheStorage implements CacheStorage {
                     logger.debug("Skipping cache entry {} expired at {}", awsKey, expires);
                     return null;
                 }
-                return bytes;
+                return new ReadResult(bytes);
             }
         } catch (NoSuchKeyException | InvalidObjectStateException e) {
             return null;

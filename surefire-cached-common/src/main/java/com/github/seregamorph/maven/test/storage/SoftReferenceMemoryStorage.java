@@ -32,7 +32,7 @@ public class SoftReferenceMemoryStorage implements CacheStorage {
 
     @Override
     @Nullable
-    public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
+    public ReadResult read(CacheEntryKey cacheEntryKey, String fileName) {
         synchronized (cache) {
             SoftReference<Map<String, byte[]>> softReferenceCacheEntry = cache.remove(cacheEntryKey);
             if (softReferenceCacheEntry == null) {
@@ -45,7 +45,8 @@ public class SoftReferenceMemoryStorage implements CacheStorage {
             }
             // LRU
             cache.put(cacheEntryKey, softReferenceCacheEntry);
-            return cacheEntry.get(fileName);
+            byte[] bytes = cacheEntry.get(fileName);
+            return new ReadResult(bytes);
         }
     }
 

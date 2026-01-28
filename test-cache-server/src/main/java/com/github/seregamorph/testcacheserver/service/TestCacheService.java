@@ -63,26 +63,26 @@ public class TestCacheService {
     @Nullable
     public byte[] getCache(CacheEntryKey cacheEntryKey, String fileName) {
         ValidatorUtils.validateFileName(fileName);
-        var body = cacheStorage.read(cacheEntryKey, fileName);
+        var readResult = cacheStorage.read(cacheEntryKey, fileName);
         var pluginName = cacheEntryKey.pluginName().name();
 
-        if (body != null) {
+        if (readResult != null) {
             Counter.builder("get.cache.size")
                 .tag("pluginName", pluginName)
                 .register(meterRegistry)
-                .increment(body.length);
+                .increment(readResult.length());
         }
 
         // this is different from "get_cache_hit" - calculate all returned files
         Counter.builder("get.cache.files")
             .tag("pluginName", pluginName)
-            .tag("exist", Boolean.toString(body != null))
+            .tag("exist", Boolean.toString(readResult != null))
             .register(meterRegistry)
             .increment();
 
         if (TRACKED_TASK_OUTPUTS.contains(fileName)) {
             // "get_cache_miss" and "get_cache_hit" calculate once per test execution entity
-            if (body == null) {
+            if (readResult == null) {
                 Counter.builder("get.cache.miss")
                     .tag("pluginName", pluginName)
                     .register(meterRegistry)
@@ -95,13 +95,13 @@ public class TestCacheService {
                 .register(meterRegistry)
                 .increment();
 
-            var testTaskOutput = JsonSerializers.deserialize(body, TestTaskOutput.class, fileName);
+            var testTaskOutput = JsonSerializers.deserialize(readResult.bytes(), TestTaskOutput.class, fileName);
             Counter.builder("cache.saved.time.seconds")
                 .tag("pluginName", pluginName)
                 .register(meterRegistry)
                 .increment(testTaskOutput.getTotalTimeSeconds().doubleValue());
         }
 
-        return body;
+        return readResult == null ? null : readResult.bytes();
     }
 }

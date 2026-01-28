@@ -2,6 +2,7 @@ package com.github.seregamorph.maven.test.storage;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
 import com.github.seregamorph.maven.test.common.GroupArtifactId;
@@ -38,7 +39,8 @@ class GzipDelegateCacheStorageTest {
         var writeResult = storage.write(cacheEntryKey, fileName, JSON_CONTENT.getBytes(UTF_8));
         assertEquals(0, writeResult.deletedFilesCount());
 
-        byte[] restoredValue = storage.read(cacheEntryKey, fileName);
-        assertEquals(JSON_CONTENT, new String(restoredValue, UTF_8));
+        var restoredReadResult = storage.read(cacheEntryKey, fileName);
+        assertNotNull(restoredReadResult);
+        assertEquals(JSON_CONTENT, new String(restoredReadResult.bytes(), UTF_8));
     }
 }

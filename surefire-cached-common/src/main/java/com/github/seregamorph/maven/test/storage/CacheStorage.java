@@ -20,7 +20,7 @@ public interface CacheStorage {
      * @throws CacheStorageException in case of I/O operations
      */
     @Nullable
-    byte[] read(CacheEntryKey cacheEntryKey, String fileName) throws CacheStorageException;
+    ReadResult read(CacheEntryKey cacheEntryKey, String fileName) throws CacheStorageException;
 
     /**
      * Write cache entry

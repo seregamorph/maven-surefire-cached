@@ -48,7 +48,7 @@ public class HttpCacheStorage implements CacheStorage {
 
     @Nullable
     @Override
-    public byte[] read(CacheEntryKey cacheEntryKey, String fileName) {
+    public ReadResult read(CacheEntryKey cacheEntryKey, String fileName) {
         String url = getEntryUri(cacheEntryKey, fileName);
         try {
             Request request = new Request.Builder()
@@ -73,7 +73,8 @@ public class HttpCacheStorage implements CacheStorage {
                     throw new IOException("Unexpected response code: " + response.code()
                         + "\n" + ResponseBodyUtils.responseBodyForLog(responseBody.string()));
                 }
-                return responseBody.bytes();
+                byte[] bytes = responseBody.bytes();
+                return new ReadResult(bytes);
             }
         } catch (IOException e) {
             throw new CacheStorageException("Error while fetching from cache " + url + " " + e, e);
