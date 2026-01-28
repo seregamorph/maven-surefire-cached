@@ -44,7 +44,7 @@ public class GzipDelegateCacheStorage implements CacheStorage {
     }
 
     @Override
-    public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) throws CacheStorageException {
+    public WriteResult write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) throws CacheStorageException {
         byte[] bytesToWrite;
         if (isAlreadyCompressed(fileName)) {
             bytesToWrite = value;

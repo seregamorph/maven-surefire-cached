@@ -63,12 +63,12 @@ public class S3CacheStorage implements CacheStorage {
     }
 
     @Override
-    public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) throws CacheStorageException {
+    public WriteResult write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) throws CacheStorageException {
         String awsKey = cacheEntryKey + "/" + fileName;
         Instant expires = Instant.now().plus(config.getExpiration());
         s3Client.putObject(b -> b.bucket(config.getBucket()).key(awsKey).expires(expires),
             RequestBody.fromBytes(value));
-        return 0;
+        return new WriteResult(0);
     }
 
     @Nullable

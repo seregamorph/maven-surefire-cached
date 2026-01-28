@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Sergey Chernov
  */
+@Deprecated
 public class MemoryStorage implements CacheStorage {
 
     private static final Logger logger = LoggerFactory.getLogger(MemoryStorage.class);
@@ -43,7 +44,7 @@ public class MemoryStorage implements CacheStorage {
     }
 
     @Override
-    public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
+    public WriteResult write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
         int deleted = 0;
         synchronized (cache) {
             Map<String, byte[]> cacheEntry = cache.remove(cacheEntryKey);
@@ -64,6 +65,6 @@ public class MemoryStorage implements CacheStorage {
             cache.put(cacheEntryKey, cacheEntry);
             cacheEntry.put(fileName, value);
         }
-        return deleted;
+        return new WriteResult(deleted);
     }
 }

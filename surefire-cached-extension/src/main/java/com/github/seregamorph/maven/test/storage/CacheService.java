@@ -61,7 +61,8 @@ public class CacheService {
 
         long start = System.nanoTime();
         try {
-            return cacheStorage.write(cacheEntryKey, fileName, value);
+            WriteResult writeResult = cacheStorage.write(cacheEntryKey, fileName, value);
+            return writeResult.deletedFilesCount();
         } catch (CacheStorageException e) {
             logger.warn("Failed to write cache entry {}", e.toString());
             metrics.addWriteFailure();

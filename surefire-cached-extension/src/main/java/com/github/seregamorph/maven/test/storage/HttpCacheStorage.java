@@ -81,7 +81,7 @@ public class HttpCacheStorage implements CacheStorage {
     }
 
     @Override
-    public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
+    public WriteResult write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
         String url = getEntryUri(cacheEntryKey, fileName);
         try {
             RequestBody requestBody = RequestBody.create(value, TYPE);
@@ -107,7 +107,7 @@ public class HttpCacheStorage implements CacheStorage {
             throw new CacheStorageException("Error while pushing to cache " + url + " " + e, e);
         }
 
-        return 0;
+        return new WriteResult(0);
     }
 
     private String getEntryUri(CacheEntryKey cacheEntryKey, String fileName) {

@@ -31,5 +31,5 @@ public interface CacheStorage {
      * @return number of deleted files
      * @throws CacheStorageException in case of I/O operations
      */
-    int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) throws CacheStorageException;
+    WriteResult write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) throws CacheStorageException;
 }

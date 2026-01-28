@@ -35,8 +35,8 @@ class GzipDelegateCacheStorageTest {
             new GroupArtifactId("com.acme", "utils"), "01234567890abcdef");
         var fileName = "content.json";
 
-        int removed = storage.write(cacheEntryKey, fileName, JSON_CONTENT.getBytes(UTF_8));
-        assertEquals(0, removed);
+        var writeResult = storage.write(cacheEntryKey, fileName, JSON_CONTENT.getBytes(UTF_8));
+        assertEquals(0, writeResult.deletedFilesCount());
 
         byte[] restoredValue = storage.read(cacheEntryKey, fileName);
         assertEquals(JSON_CONTENT, new String(restoredValue, UTF_8));

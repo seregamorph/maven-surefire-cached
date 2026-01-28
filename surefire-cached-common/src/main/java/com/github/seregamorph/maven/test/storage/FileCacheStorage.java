@@ -57,7 +57,7 @@ public class FileCacheStorage implements CacheStorage {
     }
 
     @Override
-    public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
+    public WriteResult write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
         File file = getEntryFile(cacheEntryKey, fileName);
         int deleted = createParentAndCleanupOld(file.getParentFile());
         try {
@@ -65,7 +65,7 @@ public class FileCacheStorage implements CacheStorage {
         } catch (IOException e) {
             throw new CacheStorageException("Error writing " + fileName, e);
         }
-        return deleted;
+        return new WriteResult(deleted);
     }
 
     /**

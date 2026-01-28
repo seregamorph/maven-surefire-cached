@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author Sergey Chernov
  */
+@Deprecated
 public class SoftReferenceMemoryStorage implements CacheStorage {
 
     private static final Logger logger = LoggerFactory.getLogger(SoftReferenceMemoryStorage.class);
@@ -49,7 +50,7 @@ public class SoftReferenceMemoryStorage implements CacheStorage {
     }
 
     @Override
-    public int write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
+    public WriteResult write(CacheEntryKey cacheEntryKey, String fileName, byte[] value) {
         int deleted = 0;
         synchronized (cache) {
             SoftReference<Map<String, byte[]>> softReferenceCacheEntry = cache.remove(cacheEntryKey);
@@ -71,6 +72,6 @@ public class SoftReferenceMemoryStorage implements CacheStorage {
             cache.put(cacheEntryKey, new SoftReference<>(cacheEntry));
             cacheEntry.put(fileName, value);
         }
-        return deleted;
+        return new WriteResult(deleted);
     }
 }
