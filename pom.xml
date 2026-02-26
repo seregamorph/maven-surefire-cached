@@ -291,6 +291,13 @@
                 <version>2.41.21</version>
             </dependency>
 
+            <!-- add support for aws login credentials #30 -->
+            <dependency>
+                <groupId>software.amazon.awssdk</groupId>
+                <artifactId>signing</artifactId>
+                <version>2.41.21</version>
+            </dependency>
+
             <!--test-->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
