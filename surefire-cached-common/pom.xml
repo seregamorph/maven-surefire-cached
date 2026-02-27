@@ -49,11 +49,5 @@
             <artifactId>s3</artifactId>
             <scope>provided</scope>
         </dependency>
-        <dependency>
-            <groupId>software.amazon.awssdk</groupId>
-            <artifactId>signin</artifactId>
-            <scope>provided</scope>
-            <version>2.41.21</version>
-        </dependency>
     </dependencies>
 </project>
