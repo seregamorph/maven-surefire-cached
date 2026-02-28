@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="TestCacheServerApplication" type="Application" factoryName="Application" nameIsGenerated="true">
-    <option name="MAIN_CLASS_NAME" value="com.github.seregamorph.testcacheserver.TestCacheServerApplication" />
-    <module name="test-cache-server" />
+  <configuration default="false" name="CacheServerApplication" type="Application" factoryName="Application" nameIsGenerated="true">
+    <option name="MAIN_CLASS_NAME" value="com.github.seregamorph.testcacheserver.CacheServerApplication" />
+    <module name="cache-server" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.github.seregamorph.testcacheserver.*" />

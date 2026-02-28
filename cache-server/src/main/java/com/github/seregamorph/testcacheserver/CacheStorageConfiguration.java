@@ -26,7 +26,7 @@ public class CacheStorageConfiguration {
             throw new IllegalStateException("Could not resolve default cacheStorageUrl, user.home is not defined.\n"
                 + "Please provide custom CacheStorageConfiguration.");
         }
-        var baseDir = new File(userHome, ".m2/test-cache-server");
+        var baseDir = new File(userHome, ".m2/cache-server");
         logger.info("Using cache storage located at {}", baseDir);
         return new FileCacheStorage(baseDir, 16);
     }

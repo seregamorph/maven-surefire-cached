@@ -129,7 +129,7 @@ public class HttpCacheStorage implements CacheStorage {
             } catch (NumberFormatException e) {
                 throw new MinServerProtocolVersionException("surefire-cached-extension is not compatible with server "
                     + "at " + baseUrl + ", "
-                    + "please update both extension and test-cache-server", serverProtocolVersionStr,
+                    + "please update both extension and cache-server", serverProtocolVersionStr,
                     ServerProtocolVersion.MIN_SERVER_PROTOCOL_VERSION);
             }
         }
@@ -137,7 +137,7 @@ public class HttpCacheStorage implements CacheStorage {
             // this way we prevent failures caused by a breaking change with the new structure of TestTaskOutput
             throw new MinServerProtocolVersionException("surefire-cached-extension is not compatible with server "
                 + "at " + baseUrl + ", "
-                + "please update test-cache-server first", serverProtocolVersionStr,
+                + "please update cache-server first", serverProtocolVersionStr,
                 ServerProtocolVersion.MIN_SERVER_PROTOCOL_VERSION);
         }
     }

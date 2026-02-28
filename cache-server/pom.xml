@@ -9,7 +9,7 @@
         <version>0.29-SNAPSHOT</version>
     </parent>
 
-    <artifactId>test-cache-server</artifactId>
+    <artifactId>cache-server</artifactId>
     <packaging>jar</packaging>
 
     <description>Test Cache Server</description>
@@ -80,7 +80,7 @@
     </dependencies>
 
     <build>
-        <finalName>test-cache-server</finalName>
+        <finalName>cache-server</finalName>
         <plugins>
             <plugin>
                 <groupId>org.springframework.boot</groupId>

@@ -4,7 +4,7 @@ scrape_configs:
   - job_name: 'prometheus'
     scrape_interval: 5s
     static_configs:
-      - targets: ['test-cache-server:8080']
+      - targets: ['cache-server:8080']
     metrics_path: '/actuator/prometheus'
 #  - job_name: 'node-exporter'
 #    static_configs:

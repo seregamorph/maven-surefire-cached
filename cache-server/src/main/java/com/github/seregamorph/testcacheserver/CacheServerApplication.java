@@ -7,9 +7,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
  * @author Sergey Chernov
  */
 @SpringBootApplication
-public class TestCacheServerApplication {
+public class CacheServerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(TestCacheServerApplication.class, args);
+        SpringApplication.run(CacheServerApplication.class, args);
     }
 }

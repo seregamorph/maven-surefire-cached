@@ -3,7 +3,7 @@ package com.github.seregamorph.testcacheserver.controller;
 import com.github.seregamorph.maven.test.common.CacheEntryKey;
 import com.github.seregamorph.maven.test.common.GroupArtifactId;
 import com.github.seregamorph.maven.test.common.PluginName;
-import com.github.seregamorph.testcacheserver.service.TestCacheService;
+import com.github.seregamorph.testcacheserver.service.CacheService;
 import io.micrometer.core.annotation.Counted;
 import io.micrometer.core.annotation.Timed;
 import org.springframework.http.HttpHeaders;
@@ -21,12 +21,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
  */
 @Controller
 @RequestMapping("/cache")
-public class TestCacheController {
+public class CacheController {
 
-    private final TestCacheService testCacheService;
+    private final CacheService cacheService;
 
-    public TestCacheController(TestCacheService testCacheService) {
-        this.testCacheService = testCacheService;
+    public CacheController(CacheService cacheService) {
+        this.cacheService = cacheService;
     }
 
     @Timed(value = "putCache")
@@ -41,7 +41,7 @@ public class TestCacheController {
         @RequestBody byte[] body
     ) {
         var cacheEntryKey = new CacheEntryKey(pluginName, new GroupArtifactId(groupId, artifactId), hash);
-        testCacheService.putCache(cacheEntryKey, fileName, body);
+        cacheService.putCache(cacheEntryKey, fileName, body);
         return ResponseEntity.ok().build();
     }
 
@@ -56,7 +56,7 @@ public class TestCacheController {
         @PathVariable("fileName") String fileName
     ) {
         var cacheEntryKey = new CacheEntryKey(pluginName, new GroupArtifactId(groupId, artifactId), hash);
-        var body = testCacheService.getCache(cacheEntryKey, fileName);
+        var body = cacheService.getCache(cacheEntryKey, fileName);
         if (body == null) {
             return ResponseEntity.notFound().build();
         }

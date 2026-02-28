@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
  * @author Sergey Chernov
  */
 @Service
-public class TestCacheService {
+public class CacheService {
 
     private static final List<String> TRACKED_TASK_OUTPUTS = List.of(
         "surefire-cached-output.json",
@@ -25,7 +25,7 @@ public class TestCacheService {
     private final CacheStorage cacheStorage;
     private final MeterRegistry meterRegistry;
 
-    public TestCacheService(CacheStorage cacheStorage, MeterRegistry meterRegistry) {
+    public CacheService(CacheStorage cacheStorage, MeterRegistry meterRegistry) {
         this.cacheStorage = cacheStorage;
         this.meterRegistry = meterRegistry;
     }

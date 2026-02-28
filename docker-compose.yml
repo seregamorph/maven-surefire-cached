@@ -3,14 +3,14 @@ networks:
     driver: bridge
 
 services:
-  test-cache-server:
-    container_name: test-cache-server
+  cache-server:
+    container_name: cache-server
     build:
-      context: test-cache-server
+      context: cache-server
     ports:
       - '8080:8080'
     volumes:
-      - test-cache-data:/root/.m2/test-cache-server
+      - test-cache-data:/root/.m2/cache-server
 
   prometheus:
     image: prom/prometheus:v2.53.2

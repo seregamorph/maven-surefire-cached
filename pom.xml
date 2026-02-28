@@ -338,7 +338,7 @@
 
     <profiles>
         <profile>
-            <id>test-cache-server</id>
+            <id>cache-server</id>
             <activation>
                 <property>
                     <name>performRelease</name>
@@ -346,7 +346,7 @@
                 </property>
             </activation>
             <modules>
-                <module>test-cache-server</module>
+                <module>cache-server</module>
             </modules>
         </profile>
         <profile>
