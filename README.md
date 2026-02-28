@@ -230,30 +230,46 @@ Json report can be found in `target/surefire-cached-report.json` of the build ro
   "pluginResults" : {
     "surefire-cached" : {
       "SUCCESS" : {
-        "totalModules" : 5,
-        "totalTimeSec" : 138.363
+        "modules" : {
+          "com.github.seregamorph:demo-maven-junit-platform-jupiter-boot35" : { },
+          "com.github.seregamorph:demo-maven-junit-platform-jupiter-boot40" : { }
+        },
+        "totalTimeSec" : 7.721,
+        "totalModules" : 4
+      },
+      "EMPTY" : {
+        "modules" : {
+          "com.github.seregamorph:demo-testkit" : { }
+        },
+        "totalTimeSec" : 0.091,
+        "totalModules" : 1
       },
       "FROM_CACHE" : {
-        "totalModules" : 3,
-        "totalTimeSec" : 36.281
-      },
-      "SKIPPED_CACHE" : {
-        "totalModules" : 1,
-        "totalTimeSec" : 5.420
+        "modules" : {
+          "com.github.seregamorph:demo-maven-junit-platform-jupiter-spring7" : { },
+          "com.github.seregamorph:demo-maven-junit-platform-testng-boot32" : { },
+          "com.github.seregamorph:demo-maven-testng-boot24" : { },
+          "com.github.seregamorph:spring-test-smart-context" : { }
+        },
+        "totalTimeSec" : 4.852,
+        "totalModules" : 5
       }
+    },
+    "failsafe-cached" : {
+      // similar structure to "surefire-cached"
     }
   },
   "cacheServiceMetrics" : {
-    "readHitOperations" : 9,
-    "readMissOperations" : 5,
-    "readHitBytes" : 327683,
-    "readHitMillis" : 297,
-    "readMissMillis" : 22,
+    "readHitOperations" : 12,
+    "readMissOperations" : 12,
+    "readHitBytes" : 29671,
+    "readHitMillis" : 4,
+    "readMissMillis" : 0,
     "readFailures" : 0,
     "readSkipped" : 0,
-    "writeOperations" : 20,
-    "writeBytes" : 14484173,
-    "writeMillis" : 141,
+    "writeOperations" : 12,
+    "writeBytes" : 87956,
+    "writeMillis" : 2,
     "writeFailures" : 0,
     "writeSkipped" : 0
   }
