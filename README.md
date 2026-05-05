@@ -297,6 +297,7 @@ Supported test frameworks (all that work via `maven-surefire`):
 If you run a cache server, it's possible to scrape Prometheus metrics via http://localhost:8080/actuator/prometheus
 
 See sample Grafana Dashboard:
+
 <img src="doc/grafana_dashboard.png" alt="Grafana Dashboard" width="700"/>
 
 Use these queries to build cache dashboards (TODO provide JSON to import to Grafana):
