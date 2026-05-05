@@ -58,7 +58,7 @@
         <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
         <maven-gpg-plugin.version>1.6</maven-gpg-plugin.version>
 
-        <jackson.version>2.20.2</jackson.version>
+        <jackson.version>2.21.3</jackson.version>
         <junit-jupiter.version>6.0.3</junit-jupiter.version>
         <slf4j.version>2.0.17</slf4j.version>
         <awssdk.version>2.44.0</awssdk.version>
