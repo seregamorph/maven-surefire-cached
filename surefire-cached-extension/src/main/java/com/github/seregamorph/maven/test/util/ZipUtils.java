@@ -67,6 +67,7 @@ public final class ZipUtils {
              TarArchiveOutputStream taos = new TarArchiveOutputStream(gzos)
         ) {
             taos.setLongFileMode(TarArchiveOutputStream.LONGFILE_POSIX);
+            taos.setBigNumberMode(TarArchiveOutputStream.BIGNUMBER_POSIX);
 
             List<String> matchingFileNames = findMatchingFileNames(directory, includes);
 
@@ -74,6 +75,10 @@ public final class ZipUtils {
                 File file = new File(directory, fileName);
                 if (file.isFile()) {
                     TarArchiveEntry entry = new TarArchiveEntry(file, fileName);
+                    entry.setUserId(0);
+                    entry.setGroupId(0);
+                    entry.setUserName("");
+                    entry.setGroupName("");
                     taos.putArchiveEntry(entry);
 
                     try (InputStream fis = new FileInputStream(file)) {
@@ -148,6 +153,8 @@ public final class ZipUtils {
                     }
                 }
             });
+
+        matchingFileNames.sort(null);
 
         return matchingFileNames;
     }
