@@ -21,7 +21,7 @@ Add to the `.mvn/extensions.xml` of your project:
     <extension>
         <groupId>com.github.seregamorph</groupId>
         <artifactId>surefire-cached-extension</artifactId>
-        <version>0.29</version>
+        <version>0.30</version>
     </extension>
 </extensions>
 ```
@@ -192,7 +192,7 @@ First you need to use this extension in `.mvn/extensions.xml` (instead of the re
     <extension>
         <groupId>com.github.seregamorph</groupId>
         <artifactId>surefire-cached-extension-s3</artifactId>
-        <version>0.29</version>
+        <version>0.30</version>
     </extension>
 </extensions>
 ```
@@ -285,7 +285,7 @@ which calculates task inputs (classpath elements hash codes) and reuses existing
 
 ### Supported versions
 * `Java` 8+
-* `Maven` 3.8.x, 3.9.x and 4.0.x
+* `Maven` 3.8.x, 3.9.x, 3.10.x and 4.0.x
 * `maven-surefire-plugin`/`maven-failsafe-plugin` `2.22.x`..`3.5.x`
 
 Supported test frameworks (all that work via `maven-surefire`):
