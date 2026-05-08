@@ -290,7 +290,7 @@ which calculates task inputs (classpath elements hash codes) and reuses existing
 
 Supported test frameworks (all that work via `maven-surefire`):
 * `JUnit 4`
-* `JUnit 5 Jupiter` (and other based on `JUnit 5 platform`)
+* `JUnit 5/6 Jupiter` (and other based on `JUnit 5/6 platform`)
 * `TestNG` (both bare TestNG and JUnit platform [testng-engine](https://github.com/junit-team/testng-engine))
 
 ## Monitoring
