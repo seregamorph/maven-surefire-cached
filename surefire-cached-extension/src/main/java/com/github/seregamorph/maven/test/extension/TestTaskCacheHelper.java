@@ -45,11 +45,8 @@ public class TestTaskCacheHelper {
     private CacheService cacheService;
     private CacheReport cacheReport;
 
-    public void init(MavenSession session) {
+    public void initSession(MavenSession session) {
         fileHashCache = new FileHashCache();
-        modules = session.getAllProjects().stream()
-            .map(p -> new GroupArtifactId(p.getGroupId(), p.getArtifactId()))
-            .collect(Collectors.toCollection(TreeSet::new));
 
         this.metrics = new CacheServiceMetrics();
         PropertySource propertySource = propertyName -> MavenPropertyUtils.getProperty(session, propertyName);
@@ -58,6 +55,12 @@ public class TestTaskCacheHelper {
         int cacheFailureThreshold = Integer.parseInt(propertySource.getProperty("cacheFailureThreshold", "4"));
         this.cacheService = new CacheService(cacheStorage, metrics, cacheFailureThreshold);
         this.cacheReport = new CacheReport();
+    }
+
+    public void initProjects(MavenSession session) {
+        modules = session.getAllProjects().stream()
+            .map(p -> new GroupArtifactId(p.getGroupId(), p.getArtifactId()))
+            .collect(Collectors.toCollection(TreeSet::new));
     }
 
     public void destroy() {

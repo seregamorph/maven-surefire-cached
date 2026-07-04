@@ -95,12 +95,25 @@ public class CachedTestLifecycleParticipant extends AbstractMavenLifecyclePartic
     }
 
     @Override
+    public void afterSessionStart(MavenSession session) {
+        // Implementation notice: this method is called once in CLI execution, once in Maven execution via IDEA
+        // (specifies "idea.version" property) and once in IDEA import (IDEA also specifies "idea.version" and
+        // "idea.maven.embedder.version" properties)
+        this.testTaskCacheHelper.initSession(session);
+    }
+
+    @Override
     public void afterProjectsRead(MavenSession session) {
-        this.testTaskCacheHelper.init(session);
+        // Implementation notice: this method is called once in CLI execution with the whole set of modules,
+        // same for run Maven from IDEA (specifies "idea.version" property), but
+        // runs once PER EACH module during the IDEA import
+        this.testTaskCacheHelper.initProjects(session);
     }
 
     @Override
     public void afterSessionEnd(MavenSession session) {
+        // Implementation notice: this method is called once in CLI execution, same while running Maven from IDEA
+        // and never during the IDEA reimport
         if (testTaskCacheHelper.wasPluginManagerInstantiated()) {
             CacheReport cacheReport = testTaskCacheHelper.getCacheReport();
             Map<PluginName, Map<TaskOutcome, AggResult>> pluginResults = handleReport(cacheReport);

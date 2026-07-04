@@ -58,7 +58,8 @@ public class IntegrationTestCachedMojoTest {
         when(delegate.getSummaryFile()).thenReturn(getResourceFile("failsafe-reports/failsafe-summary.xml"));
         when(delegate.getReportsDirectory()).thenReturn(getResourceFile("failsafe-reports"));
         testTaskCacheHelper = new TestTaskCacheHelper();
-        testTaskCacheHelper.init(session);
+        testTaskCacheHelper.initSession(session);
+        testTaskCacheHelper.initProjects(session);
         integrationTestCachedMojo = new IntegrationTestCachedMojo(testTaskCacheHelper, session, project, delegate);
     }
 

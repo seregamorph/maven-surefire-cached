@@ -57,7 +57,8 @@ public class SurefireCachedMojoTest {
         when(((ContextEnabled) delegate).getPluginContext()).thenReturn(Collections.emptyMap());
         when(delegate.getReportsDirectory()).thenReturn(getResourceFile("surefire-reports"));
         testTaskCacheHelper = new TestTaskCacheHelper();
-        testTaskCacheHelper.init(session);
+        testTaskCacheHelper.initSession(session);
+        testTaskCacheHelper.initProjects(session);
         surefireCachedMojo = new SurefireCachedMojo(testTaskCacheHelper, session, project, delegate);
     }
 
