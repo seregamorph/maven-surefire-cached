@@ -138,6 +138,14 @@ Parameters:
 | `cacheExpirationHours` | Time interval in hours for how long the cache entity is valid. Now used only for the Amazon S3 storage.                          | `6`                                                    |
 | `maxCacheEntries` | Maximum number of different caches for a combination of same `groupId.artifactId.version`. Can use in CI for shared `FileCache`. | `16` for CI environments, `4` for all other environments |
 
+Caching can be skipped globally via `-DskipCache` in the command line, or per module if needed via the property in
+the module `pom.xml`:
+```xml
+<properties>
+    <skipCache>true</skipCache>
+</properties>
+```
+
 ## Sample adoption:
 * https://github.com/seregamorph/spring-test-smart-context/pull/23
 * https://github.com/seregamorph/rest-api-framework/pull/2
