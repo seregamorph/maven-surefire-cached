@@ -15,6 +15,7 @@ import com.github.seregamorph.maven.test.util.MavenPropertyUtils;
 import com.github.seregamorph.maven.test.util.PropertySource;
 import java.io.File;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +23,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.inject.Singleton;
 import org.apache.maven.artifact.Artifact;
 import org.apache.maven.execution.MavenSession;
@@ -58,7 +60,13 @@ public class TestTaskCacheHelper {
     }
 
     public void initProjects(MavenSession session) {
-        modules = session.getAllProjects().stream()
+        @Nullable List<MavenProject> allProjects = session.getAllProjects();
+        if (allProjects == null) {
+            // This potentially may happen e.g. during the IDEA import.
+            // Failover to empty list.
+            allProjects = new ArrayList<>();
+        }
+        modules = allProjects.stream()
             .map(p -> new GroupArtifactId(p.getGroupId(), p.getArtifactId()))
             .collect(Collectors.toCollection(TreeSet::new));
     }
