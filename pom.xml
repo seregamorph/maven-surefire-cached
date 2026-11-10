@@ -47,7 +47,7 @@
         -->
         <project.build.outputTimestamp>2026-07-07T20:50:52Z</project.build.outputTimestamp>
 
-        <maven.version>4.0.0-rc-5</maven.version>
+        <maven.version>4.0.0-rc-7</maven.version>
         <maven-compiler-plugin.version>3.14.1</maven-compiler-plugin.version>
         <maven-jar-plugin.version>3.5.0</maven-jar-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
